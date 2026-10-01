@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D47A1">
+<title>ENU · IDSAI — Student Services</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ==================== ЗАСТАВКА / KIOSK START ==================== -->
+<div id="splash" class="splash" aria-label="ENU IDSAI kiosk start screen">
+  <div class="splash-grid" aria-hidden="true"></div>
+  <div class="splash-glow glow-a" aria-hidden="true"></div>
+  <div class="splash-glow glow-b" aria-hidden="true"></div>
+  <div class="splash-shell minimal-splash">
+    <div class="university-name">L.N. GUMILYOV EURASIAN NATIONAL UNIVERSITY</div>
+    <div class="logo-stage" aria-label="University and institute logos">
+      <div class="logo-card logo-card-enu">
+        <span class="logo-halo" aria-hidden="true"></span>
+        <img src="assets/enu-logo.png" alt="L.N. Gumilyov Eurasian National University">
+      </div>
+      <div class="logo-link" aria-hidden="true"><span></span><i></i><span></span></div>
+      <div class="logo-card logo-card-idsai">
+        <span class="logo-halo" aria-hidden="true"></span>
+        <img src="assets/idsai-logo.png" alt="Institute of Digital Sciences and Artificial Intelligence">
+      </div>
+    </div>
+    <div class="institute-name">INSTITUTE OF DIGITAL SCIENCES AND ARTIFICIAL INTELLIGENCE</div>
+    <button id="startKioskBtn" class="start-kiosk" type="button" onclick="startKiosk()">
+      <span class="start-icon" aria-hidden="true">↗</span>
+      <span>БАСТАУ / НАЧАТЬ</span>
+    </button>
+    <div class="splash-note">Толық экран режимі қосылады · Включится полноэкранный режим</div>
+  </div>
+</div>
+
+<!-- ==================== ЭКРАН 1: ГЛАВНОЕ МЕНЮ ==================== -->
+<section class="screen on" id="menu">
+  <header>
+    <div class="header-brand" aria-hidden="true">
+      <img class="header-logo enu-mini" src="assets/enu-logo.png" alt="">
+      <span class="header-brand-line"></span>
+      <img class="header-logo idsai-mini" src="assets/idsai-logo.png" alt="">
+    </div>
+    <h1 data-t="title">СТУДЕНЧЕСКИЕ СЕРВИСЫ</h1>
+    <p data-t="subtitle">Институт цифровых наук и искусственного интеллекта</p>
+    <div class="lang">
+      <button id="lk" onclick="setLang('kk')">ҚАЗ</button><i>|</i>
+      <button id="lr" class="active" onclick="setLang('ru')">РУС</button>
+    </div>
+  </header>
+  <main>
+    <div class="tiles">
+      <button class="tile navy" onclick="showCatalog()">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M14 6h24l12 12v40a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="#0D47A1"/>
+          <path d="M38 6l12 12H40a2 2 0 0 1-2-2V6z" fill="#90CAF9"/>
+          <g stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 28h24M20 36h24M20 44h16"/></g>
+        </svg>
+        <span data-t="mForm">ЗАПОЛНИТЬ<br>ЗАЯВЛЕНИЕ</span>
+      </button>
+
+      <button class="tile navy" onclick="goSite('platonus')">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="4" y="10" width="56" height="38" rx="3" fill="#0D47A1"/>
+          <rect x="9" y="15" width="46" height="28" rx="2" fill="#fff"/>
+          <circle cx="23" cy="26" r="5" fill="#0D47A1"/>
+          <path d="M15 37c0-4.4 3.6-7 8-7s8 2.6 8 7z" fill="#0D47A1"/>
+          <g stroke="#0D47A1" stroke-width="3" stroke-linecap="round"><path d="M37 24h12M37 30h12M37 36h8"/></g>
+          <path d="M25 48h14v5H25z" fill="#0D47A1"/>
+          <rect x="18" y="53" width="28" height="4" rx="2" fill="#0D47A1"/>
+        </svg>
+        <span>PLATONUS</span>
+      </button>
+
+      <button class="tile navy" onclick="goSite('enu')">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M32 6L60 20H4L32 6z" fill="#0D47A1"/>
+          <rect x="4" y="22" width="56" height="4" rx="1" fill="#0D47A1"/>
+          <g fill="#0D47A1">
+            <rect x="11" y="28" width="7" height="20" rx="1"/><rect x="24" y="28" width="7" height="20" rx="1"/>
+            <rect x="37" y="28" width="7" height="20" rx="1"/><rect x="50" y="28" width="3" height="20" rx="1"/>
+          </g>
+          <rect x="4" y="50" width="56" height="6" rx="1.5" fill="#0D47A1"/>
+        </svg>
+        <span data-t="mEnu">САЙТ ЕНУ</span>
+      </button>
+
+      <button class="tile exit-tile" onclick="requestAdminExit()">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M34 8H12a4 4 0 0 0-4 4v40a4 4 0 0 0 4 4h22" stroke="#0D47A1" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M42 20l12 12-12 12M28 32h26" stroke="#0D47A1" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span data-t="mExit">ЗАВЕРШИТЬ<br>СЕАНС</span>
+      </button>
+
+      <button class="tile navy free-rooms-tile" onclick="showFreeClassrooms()">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M9 26L32 12l23 14" stroke="#0D47A1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 27v22h28" stroke="#0D47A1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M23 34h7v7h-7zM34 34h7v7h-7z" fill="#90CAF9" stroke="#0D47A1" stroke-width="2"/>
+          <circle cx="46" cy="46" r="9" fill="#fff" stroke="#0D47A1" stroke-width="4"/>
+          <path d="M52.5 52.5L59 59" stroke="#0D47A1" stroke-width="4" stroke-linecap="round"/>
+          <path d="M46 41v5l3 2" stroke="#0D47A1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span data-t="mFree">СВОБОДНЫЕ<br>АУДИТОРИИ</span>
+      </button>
+    </div>
+    <div class="hint" data-t="hint">Выберите нужный раздел</div>
+  </main>
+</section>
+
+<!-- ==================== ЭКРАН 2: КАТАЛОГ ==================== -->
+<section class="screen" id="catalog">
+  <div class="bar">
+    <button class="btn-back" onclick="showMenu()" data-t="bMenu">← Меню</button>
+    <h2 data-t="cTitle">Заявления и справки</h2>
+    <div class="lang">
+      <button onclick="setLang('kk')" class="l-kk">ҚАЗ</button><i>|</i>
+      <button onclick="setLang('ru')" class="l-ru active">РУС</button>
+    </div>
+  </div>
+  <div class="pane" id="catList"></div>
+</section>
+
+<!-- ==================== ЭКРАН 3: КАРТОЧКА ==================== -->
+<section class="screen" id="card">
+  <div class="bar">
+    <button class="btn-back" onclick="showCatalog()" data-t="bList">← К списку</button>
+    <h2 id="cardTitle"></h2>
+  </div>
+  <div class="pane">
+    <div class="info" id="cardInfo"></div>
+    <div class="preview">
+      <div class="cap" data-t="cap">Так выглядит бланк</div>
+      <div class="frame" id="prevFrame"><div id="previewHost"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== ЭКРАН 4: БЛАНК ==================== -->
+<section class="screen" id="blank">
+  <div class="bar">
+    <button class="btn-back" onclick="showCard()" data-t="bBack">← Назад</button>
+    <span class="hintline" data-t="pHint">Заполните подсвеченные поля и распечатайте официальный бланк</span>
+    <button class="btn-original" onclick="openOriginalPdf()" data-t="bOriginalPdf">Оригинальный PDF</button>
+    <button class="btn-print" onclick="doPrint()" data-t="bPrint">Печать бланка</button>
+  </div>
+  <div class="pane official-form-pane">
+    <div class="official-form-help">
+      <div class="official-badge">PDF</div>
+      <div>
+        <b data-t="officialFormTitle">Официальный бланк</b>
+        <span data-t="officialFormHelp">Голубые поля можно заполнить онлайн. При печати подсветка исчезнет, размер страницы останется A4.</span>
+      </div>
+      <button type="button" class="mini clear-btn" onclick="clearSheet()" data-t="bClear">Очистить заполненные поля</button>
+    </div>
+    <div id="blankHost" class="official-pages-host"></div>
+  </div>
+</section>
+
+<!-- ==================== ЭКРАН 5: БОС АУДИТОРИЯЛАР ==================== -->
+<section class="screen" id="freeClassrooms">
+  <div class="bar free-bar">
+    <button class="btn-back" onclick="showMenu()" data-t="bMenu">← Меню</button>
+    <h2 data-t="freeTitle">Свободные аудитории</h2>
+    <div class="academic-period-badge" id="academicPeriodBadge">2026 · 1 семестр</div>
+    <div class="lang">
+      <button onclick="setLang('kk')" class="l-kk">ҚАЗ</button><i>|</i>
+      <button onclick="setLang('ru')" class="l-ru active">РУС</button>
+    </div>
+  </div>
+
+  <div class="free-pane">
+    <div class="free-shell">
+      <div class="agent-card agent-intro">
+        <div class="agent-avatar" aria-hidden="true"><span>AI</span></div>
+        <div class="agent-bubble">
+          <div class="agent-name">IDSAI Assistant</div>
+          <p data-t="freeGreeting">Здравствуйте! 👋 Выберите день и время, чтобы найти свободную аудиторию.</p>
+        </div>
+      </div>
+
+      <div id="freeDataError" class="free-data-error" hidden role="alert"></div>
+
+      <div class="free-search-panel" id="freeSearchPanel">
+        <section class="selector-section" aria-labelledby="daySelectorTitle">
+          <div class="selector-heading">
+            <span class="selector-number">1</span>
+            <div>
+              <h3 id="daySelectorTitle" data-t="freeDayTitle">Выберите день</h3>
+              <p data-t="freeDayHint">Можно выбрать только один день.</p>
+            </div>
+          </div>
+          <div id="freeDayOptions" class="day-options" role="radiogroup" aria-label="День недели"></div>
+        </section>
+
+        <section class="selector-section" aria-labelledby="timeSelectorTitle">
+          <div class="selector-heading">
+            <span class="selector-number">2</span>
+            <div>
+              <h3 id="timeSelectorTitle" data-t="freeTimeTitle">Выберите время</h3>
+              <p data-t="freeTimeHint">Можно выбрать только один временной интервал.</p>
+            </div>
+          </div>
+          <div id="freeTimeOptions" class="time-options"></div>
+        </section>
+
+        <div class="free-search-actions">
+          <div id="freeSelectionSummary" class="selection-summary" aria-live="polite"></div>
+          <button id="freeSearchButton" class="free-search-button" type="button" onclick="searchFreeClassrooms()" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+            <span data-t="freeSearch">НАЙТИ СВОБОДНЫЕ АУДИТОРИИ</span>
+          </button>
+          <div id="freeValidation" class="free-validation" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div id="freeResultArea" class="free-result-area" hidden>
+        <div class="agent-card agent-result-card">
+          <div class="agent-avatar result-avatar" aria-hidden="true"><span>AI</span></div>
+          <div class="agent-bubble">
+            <div class="agent-name">IDSAI Assistant</div>
+            <div id="freeAgentMessage" class="agent-result-message" aria-live="polite"></div>
+            <div id="freeTyping" class="typing-indicator" hidden aria-label="Loading"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+        <div class="results-toolbar" id="freeResultsToolbar" hidden>
+          <div class="results-count" id="freeResultsCount"></div>
+          <button type="button" class="free-reset-button" onclick="resetFreeClassroomsSearch()" data-t="freeNewSearch">Новый поиск</button>
+        </div>
+        <div id="freeRoomResults" class="room-results"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="idle" id="idle"></div>
+
+<!-- ==================== ADMIN / FULLSCREEN LOCK ==================== -->
+<div id="adminLock" class="admin-lock" aria-hidden="true">
+  <div class="admin-panel" role="dialog" aria-modal="true" aria-labelledby="adminLockTitle">
+    <div class="lock-mark" aria-hidden="true">🔒</div>
+    <div class="lock-eyebrow">ENU · IDSAI KIOSK</div>
+    <h2 id="adminLockTitle">Киоск режимі қорғалған</h2>
+    <p id="adminLockText">Толық экран режимінен шығу үшін әкімші құпиясөзін енгізіңіз.</p>
+
+    <button id="resumeKioskBtn" class="resume-kiosk" type="button" onclick="resumeKiosk()">
+      Толық экранға оралу / Вернуться в полный экран
+    </button>
+
+    <div class="admin-separator"><span></span><b>ADMIN</b><span></span></div>
+    <label class="admin-label" for="adminPassword">Әкімші құпиясөзі / Пароль администратора</label>
+    <div class="admin-password-row">
+      <input id="adminPassword" type="password" autocomplete="off" inputmode="text" placeholder="••••••••">
+      <button type="button" class="admin-submit" onclick="verifyAdminExit()">Шығу / Выйти</button>
+    </div>
+    <div id="adminError" class="admin-error" aria-live="polite"></div>
+    <button id="cancelExitBtn" class="cancel-exit" type="button" onclick="cancelAdminExit()">Болдырмау / Отмена</button>
+  </div>
+</div>
+
+<script src="data/offline-data.js"></script>
+<script src="official-forms-data.js"></script>
+<script src="classroom-availability-service.js" defer></script>
+<script src="app.js" defer></script>
+<script src="free-classrooms.js" defer></script>
+</body>
+</html>

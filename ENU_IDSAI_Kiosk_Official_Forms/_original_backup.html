@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Цифровое самообслуживание — ИЦНиИИ</title>
+<style>
+/* ============================ ОБЩЕЕ ============================ */
+:root{
+  --navy:#123A6B; --navy-2:#1B4E8C; --red:#8C2230;
+  --tile:#F2F3F5; --tile-hover:#E4E7EB; --line:#DCDFE4;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:"Segoe UI",Arial,Helvetica,sans-serif;
+  background:#fff;color:var(--navy);
+  display:flex;flex-direction:column;overflow:hidden;user-select:none;
+}
+.screen{display:none;flex:1 1 auto;flex-direction:column;min-height:0;}
+.screen.on{display:flex;}
+
+/* ============================ ЭКРАН 1: МЕНЮ ============================ */
+#menu header{
+  background:var(--navy);color:#fff;padding:2.2vh 3vw;position:relative;text-align:center;flex:0 0 auto;
+}
+#menu header h1{font-size:clamp(22px,3.4vw,46px);font-weight:700;letter-spacing:.02em;line-height:1.15;}
+#menu header p{font-size:clamp(12px,1.35vw,20px);opacity:.92;margin-top:.4em;}
+.lang{
+  position:absolute;top:50%;right:2.5vw;transform:translateY(-50%);
+  display:flex;align-items:center;gap:.6em;font-size:clamp(11px,1.1vw,17px);font-weight:600;
+}
+.lang button{background:none;border:none;color:#fff;font:inherit;cursor:pointer;
+  padding:.35em .6em;border-radius:6px;opacity:.6;transition:.15s;}
+.lang button.active{opacity:1;background:rgba(255,255,255,.18);}
+.lang i{opacity:.45;font-style:normal;}
+
+#menu main{
+  flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4vh;padding:3vh 3vw;
+}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:clamp(12px,1.8vw,32px);width:100%;max-width:1560px;}
+.tile{
+  background:var(--tile);border:none;border-radius:14px;
+  padding:clamp(16px,2.4vh,34px) 10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(10px,1.8vh,22px);
+  font-family:inherit;font-size:clamp(13px,1.4vw,22px);font-weight:700;
+  line-height:1.25;text-align:center;cursor:pointer;
+  transition:background .15s,transform .1s;
+  min-height:clamp(170px,38vh,400px);
+}
+.tile:hover{background:var(--tile-hover);}
+.tile:active{transform:scale(.97);}
+.tile svg{width:clamp(46px,6.5vw,110px);height:auto;}
+.tile.navy{color:var(--navy);} .tile.red{color:var(--red);}
+.hint{font-size:clamp(15px,1.75vw,28px);font-weight:600;color:var(--navy);}
+
+/* ============================ ОБЩАЯ ШАПКА ВНУТРЕННИХ ЭКРАНОВ ============================ */
+.bar{
+  background:var(--navy);color:#fff;flex:0 0 auto;
+  display:flex;align-items:center;gap:18px;padding:14px 26px;
+}
+.bar .btn-back{background:rgba(255,255,255,.16);border:none;color:#fff;
+  font:700 17px/1 inherit;padding:14px 22px;border-radius:10px;cursor:pointer;}
+.bar .btn-back:hover{background:rgba(255,255,255,.28);}
+.bar h2{flex:1;font-size:clamp(16px,2vw,28px);font-weight:700;}
+.bar .btn-print{background:#fff;color:var(--red);border:none;
+  font:700 18px/1 inherit;padding:15px 28px;border-radius:10px;cursor:pointer;}
+.bar .btn-print:hover{background:#F1D9DC;}
+.bar .hintline{font-size:15px;opacity:.85;}
+@media (max-width:900px){ .bar .hintline{display:none;} }
+
+/* ============================ ЭКРАН 2: КАТАЛОГ ============================ */
+#catalog .pane{flex:1 1 auto;overflow-y:auto;padding:24px 30px 40px;}
+.cat-title{font-size:clamp(15px,1.5vw,22px);font-weight:700;color:var(--navy-2);
+  margin:22px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line);}
+.cat-title:first-child{margin-top:0;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.item{
+  background:var(--tile);border:none;border-radius:14px;padding:22px 22px 20px;
+  text-align:left;cursor:pointer;font-family:inherit;color:var(--navy);
+  display:flex;flex-direction:column;gap:8px;transition:background .15s,transform .1s;
+}
+.item:hover{background:var(--tile-hover);}
+.item:active{transform:scale(.985);}
+.item b{font-size:clamp(16px,1.5vw,21px);line-height:1.25;}
+.item small{font-size:clamp(12px,1.05vw,15px);font-weight:400;color:#4A5A72;line-height:1.4;}
+.item .go{margin-top:auto;padding-top:10px;font-size:14px;font-weight:700;color:var(--red);}
+
+/* ============================ ЭКРАН 3: КАРТОЧКА ============================ */
+#card .pane{flex:1 1 auto;min-height:0;display:grid;
+  grid-template-columns:minmax(320px,42%) 1fr;gap:24px;padding:24px 30px 30px;}
+.info{overflow-y:auto;padding-right:6px;}
+.info h3{font-size:clamp(19px,2vw,29px);line-height:1.2;margin-bottom:10px;}
+.info .about{font-size:clamp(14px,1.2vw,18px);color:#3B4A61;line-height:1.5;margin-bottom:20px;}
+.block{margin-bottom:20px;}
+.block h4{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--red);margin-bottom:8px;}
+.block ul{list-style:none;}
+.block li{position:relative;padding-left:22px;margin-bottom:7px;
+  font-size:clamp(14px,1.15vw,17px);line-height:1.45;color:#22324A;}
+.block li::before{content:"";position:absolute;left:4px;top:.62em;
+  width:7px;height:7px;border-radius:50%;background:var(--navy-2);}
+.facts{margin-bottom:20px;}
+.fact{background:#EEF2F8;border-radius:10px;padding:12px 16px;display:inline-block;}
+.fact span{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:#6B7B93;margin-bottom:4px;}
+.fact b{font-size:clamp(14px,1.15vw,17px);font-weight:600;color:var(--navy);}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chips span{background:#EEF2F8;border-radius:8px;padding:7px 12px;
+  font-size:clamp(12px,1vw,15px);font-weight:600;color:#33465F;}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;}
+.btn{font-family:inherit;font-size:clamp(15px,1.35vw,20px);font-weight:700;
+  border:none;border-radius:12px;padding:18px 30px;cursor:pointer;transition:.15s;}
+.btn.primary{background:var(--red);color:#fff;}
+.btn.primary:hover{background:#A32A3A;}
+.btn.ghost{background:var(--tile);color:var(--navy);}
+.btn.ghost:hover{background:var(--tile-hover);}
+.btn:active{transform:scale(.97);}
+
+.preview{background:#E9EBEF;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
+.preview .cap{padding:10px 16px;font-size:13px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:#6B7B93;background:#DFE3E9;}
+.preview .frame{flex:1;position:relative;overflow:hidden;}
+#previewHost{position:absolute;top:0;left:50%;transform-origin:top center;}
+#previewHost .blank{box-shadow:0 4px 18px rgba(0,0,0,.15);}
+@media (max-width:1000px){ #card .pane{grid-template-columns:1fr;} .preview{display:none;} }
+
+/* ============================ ЭКРАН 4: БЛАНК ============================ */
+#blank .pane{flex:1 1 auto;overflow-y:auto;background:#E9EBEF;padding:24px 20px 50px;
+  display:flex;flex-direction:column;align-items:center;}
+#blankHost .blank{box-shadow:0 6px 28px rgba(0,0,0,.18);}
+
+/* ============================ ПОДСКАЗКА О БЕЗДЕЙСТВИИ ============================ */
+.idle{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  background:var(--red);color:#fff;padding:12px 26px;border-radius:999px;
+  font-size:16px;font-weight:600;display:none;z-index:60;}
+.idle.show{display:block;}
+
+/* ============================ ПЕЧАТЬ ============================ */
+@media print{
+  body{display:block;overflow:visible;}
+  #menu,#catalog,#card,.bar,.idle{display:none !important;}
+  #blank{display:block !important;}
+  #blank .pane{background:#fff;padding:0;display:block;overflow:visible;}
+  #blankHost .blank{box-shadow:none;}
+}
+
+/* ===== ОФОРМЛЕНИЕ БЛАНКОВ (blank.css) ===== */
+/* ============================================================================
+   blank.css — единое оформление всех бланков заявлений (лист А4).
+   Подключается и в каталоге киоска, и в каждом отдельном файле бланка.
+   ============================================================================ */
+
+
+
+/* .sheet — содержимое листа; при печати ужимается, чтобы влезть на одну страницу */
+.blank > .sheet{ transform-origin: top left; }
+
+.blank{
+  margin:0 auto;
+  width:210mm;
+  min-height:297mm;
+  padding:20mm 18mm 20mm 25mm;   /* слева поле шире — под подшивку */
+  background:#fff;
+  color:#000;
+  font-family:"Times New Roman",Georgia,serif;
+  font-size:14pt;
+  line-height:1.55;
+  box-sizing:border-box;
+}
+
+/* Шапка: кому и от кого — справа */
+.blank .to p{ margin:0 0 1.5mm; }
+.blank .office p{ margin:0 0 1.5mm; }
+
+.blank .to{
+  width:52%;
+  margin-left:48%;
+  margin-bottom:14mm;
+  font-size:13pt;
+  line-height:1.5;
+}
+
+.blank h1{
+  text-align:center;
+  font-size:16pt;
+  font-weight:700;
+  letter-spacing:.12em;
+  margin:0 0 10mm;
+  text-transform:uppercase;
+}
+
+.blank .body{ text-align:left; text-indent:10mm; }
+.blank .body p{ margin:0 0 4mm; }
+
+/* Линия для рукописного заполнения */
+.blank .fill{
+  display:inline-block;
+  border-bottom:1px solid #000;
+  min-width:40mm;
+  height:1.15em;
+  vertical-align:baseline;
+}
+.blank .fill.s  { min-width:16mm; }
+.blank .nw      { white-space:nowrap; }
+.blank .fill.m  { min-width:60mm; }
+.blank .fill.l  { min-width:100mm; }
+.blank .fill.xl { min-width:100%; }
+
+/* Пояснение мелким шрифтом под линией */
+.blank .note{
+  display:block;
+  font-size:8.5pt;
+  color:#444;
+  text-align:center;
+  line-height:1.2;
+  margin-top:.5mm;
+}
+
+/* Пустые строки для свободного текста */
+.blank .lines{ margin:3mm 0 6mm; }
+.blank .lines div{
+  border-bottom:1px solid #000;
+  height:9mm;
+}
+
+/* Приложение */
+.blank .attach{ margin:6mm 0 0; }
+.blank .attach ol{ margin:2mm 0 0 12mm; padding:0; }
+.blank .attach li{ margin-bottom:2.5mm; }
+
+/* Подвал: дата слева, подпись справа */
+.blank .sign{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  margin-top:16mm;
+}
+.blank .sign .cell{ width:45%; }
+.blank .sign .cell.right{ text-align:right; }
+
+/* Служебные отметки */
+.blank .office{
+  margin-top:18mm;
+  padding-top:4mm;
+  border-top:1px dashed #888;
+  font-size:10pt;
+  color:#333;
+}
+
+/* ---------------- ПЕЧАТЬ ---------------- */
+@page{ size:A4; margin:0; }
+
+@media print{
+  html,body{ margin:0; padding:0; background:#fff; display:block; }
+  .blank{ height:297mm; overflow:hidden; }
+  body.has-bar{ padding:0; display:block; }   /* flex ломает разбивку на страницы */
+  .blank-bar{ display:none !important; }
+  body.has-bar{ background:#fff; }
+  .blank{
+    box-shadow:none;
+    width:auto;
+    min-height:auto;
+    margin:0;
+    padding:12mm 14mm 10mm 20mm;
+  }
+  /* плотнее, чтобы бланк гарантированно уместился на одном листе */
+  .blank .to      { margin-bottom:7mm; }
+  .blank h1       { margin-bottom:6mm; }
+  .blank .sign    { margin-top:8mm; }
+  .blank .office  { margin-top:6mm; }
+  .blank .lines   { margin:2mm 0 4mm; }
+  .blank .lines div{ height:7mm; }
+  .blank .attach  { margin-top:4mm; }
+  .blank .attach li{ margin-bottom:2mm; }
+}
+
+/* ---------------- ТАБЛИЦЫ И СПИСКИ В БЛАНКАХ ---------------- */
+.blank .form p{ margin:0 0 5mm; text-indent:0; }
+
+.blank .center-head{ text-align:center; font-size:13pt; margin-bottom:6mm; }
+
+.blank table.tbl{
+  width:100%;
+  border-collapse:collapse;
+  font-size:11pt;
+  margin:2mm 0 5mm;
+}
+.blank table.tbl th,
+.blank table.tbl td{
+  border:1px solid #000;
+  padding:2mm 2.5mm;
+  vertical-align:top;
+  text-align:left;
+}
+.blank table.tbl th{ font-weight:600; font-size:10pt; }
+.blank table.tbl td{ height:13mm; }
+
+.blank .reasons{ font-size:10.5pt; margin-bottom:4mm; }
+.blank .reasons ol{ margin:1.5mm 0 0 10mm; padding:0; }
+.blank .reasons li{ margin-bottom:1mm; }
+
+.blank ol.route{ margin:0 0 0 8mm; padding:0; }
+.blank ol.route li{ margin-bottom:5mm; }
+.blank .note.left{ text-align:left; margin-left:2mm; }
+
+
+/* ============================ ЗАПОЛНЕНИЕ НА ЭКРАНЕ ============================ */
+.blank{ user-select:text; }
+
+.fill[contenteditable]{
+  height:auto; min-height:1.15em; padding:0 3px; outline:none;
+  background:#FFF7CC; cursor:text; white-space:pre-wrap;
+}
+.fill[contenteditable]:hover{ background:#FFEE99; }
+.fill[contenteditable]:focus{ background:#FFE066; }
+
+.lines div[contenteditable],
+table.tbl td[contenteditable]{ background:#FFF7CC; outline:none; cursor:text; padding:1mm 2mm; }
+.lines div[contenteditable]:hover,
+table.tbl td[contenteditable]:hover{ background:#FFEE99; }
+.lines div[contenteditable]:focus,
+table.tbl td[contenteditable]:focus{ background:#FFE066; }
+
+/* панель личных данных */
+.mydata{
+  background:#fff;border:1px solid #D3D9E3;border-radius:14px;
+  padding:20px 22px;margin:0 0 22px;width:100%;max-width:210mm;
+}
+.mydata h4{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--red);margin-bottom:14px;}
+.mydata .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+.mydata label{display:block;font-size:12px;font-weight:600;color:#6B7B93;margin-bottom:5px;}
+.mydata input{width:100%;font-family:inherit;font-size:16px;padding:11px 12px;
+  border:1px solid #C6CEDA;border-radius:8px;background:#fff;color:var(--navy);}
+.mydata input:focus{outline:2px solid var(--navy-2);border-color:var(--navy-2);}
+.mydata .row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center;}
+.mydata .mini{font-family:inherit;font-size:15px;font-weight:700;border:none;
+  border-radius:9px;padding:12px 22px;cursor:pointer;}
+.mydata .mini.clear-btn{background:#F2F3F5;color:var(--navy);}
+.mydata .mini.clear-btn:hover{background:#E4E7EB;}
+.mydata .note-line{font-size:14px;color:#5A6B85;line-height:1.4;}
+
+@media print{
+  .mydata{display:none !important;}
+  .fill[contenteditable],
+  .lines div[contenteditable],
+  table.tbl td[contenteditable]{background:none !important;}
+}
+
+</style>
+</head>
+<body>
+
+<!-- ==================== ЭКРАН 1: ГЛАВНОЕ МЕНЮ ==================== -->
+<section class="screen on" id="menu">
+  <header>
+    <h1 data-t="title">ЦИФРОВОЕ САМООБСЛУЖИВАНИЕ</h1>
+    <p data-t="subtitle">Институт цифровых наук и искусственного интеллекта</p>
+    <div class="lang">
+      <button id="lk" onclick="setLang('kk')">ҚАЗ</button><i>|</i>
+      <button id="lr" class="active" onclick="setLang('ru')">РУС</button>
+    </div>
+  </header>
+  <main>
+    <div class="tiles">
+      <button class="tile navy" onclick="showCatalog()">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 6h24l12 12v40a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="#123A6B"/>
+          <path d="M38 6l12 12H40a2 2 0 0 1-2-2V6z" fill="#4C6FA5"/>
+          <g stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 28h24M20 36h24M20 44h16"/></g>
+        </svg>
+        <span data-t="mForm">ЗАПОЛНИТЬ<br>ЗАЯВЛЕНИЕ</span>
+      </button>
+
+      <button class="tile red" onclick="goSite('platonus')">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="10" width="56" height="38" rx="3" fill="#8C2230"/>
+          <rect x="9" y="15" width="46" height="28" rx="2" fill="#fff"/>
+          <circle cx="23" cy="26" r="5" fill="#8C2230"/>
+          <path d="M15 37c0-4.4 3.6-7 8-7s8 2.6 8 7z" fill="#8C2230"/>
+          <g stroke="#8C2230" stroke-width="3" stroke-linecap="round"><path d="M37 24h12M37 30h12M37 36h8"/></g>
+          <path d="M25 48h14v5H25z" fill="#8C2230"/>
+          <rect x="18" y="53" width="28" height="4" rx="2" fill="#8C2230"/>
+        </svg>
+        <span>PLATONUS</span>
+      </button>
+
+      <button class="tile navy" onclick="goSite('enu')">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <path d="M32 6L60 20H4L32 6z" fill="#123A6B"/>
+          <rect x="4" y="22" width="56" height="4" rx="1" fill="#123A6B"/>
+          <g fill="#123A6B">
+            <rect x="11" y="28" width="7" height="20" rx="1"/><rect x="24" y="28" width="7" height="20" rx="1"/>
+            <rect x="37" y="28" width="7" height="20" rx="1"/><rect x="50" y="28" width="3" height="20" rx="1"/>
+          </g>
+          <rect x="4" y="50" width="56" height="6" rx="1.5" fill="#123A6B"/>
+        </svg>
+        <span data-t="mEnu">САЙТ ЕНУ</span>
+      </button>
+
+      <button class="tile red" onclick="endSession()">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M34 8H12a4 4 0 0 0-4 4v40a4 4 0 0 0 4 4h22" stroke="#8C2230" stroke-width="6"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M42 20l12 12-12 12M28 32h26" stroke="#8C2230" stroke-width="6"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span data-t="mExit">ЗАВЕРШИТЬ<br>СЕАНС</span>
+      </button>
+    </div>
+    <div class="hint" data-t="hint">Выберите нужный раздел</div>
+  </main>
+</section>
+
+<!-- ==================== ЭКРАН 2: КАТАЛОГ ==================== -->
+<section class="screen" id="catalog">
+  <div class="bar">
+    <button class="btn-back" onclick="showMenu()" data-t="bMenu">← Меню</button>
+    <h2 data-t="cTitle">Заявления и справки</h2>
+    <div class="lang">
+      <button onclick="setLang('kk')" class="l-kk">ҚАЗ</button><i>|</i>
+      <button onclick="setLang('ru')" class="l-ru active">РУС</button>
+    </div>
+  </div>
+  <div class="pane" id="catList"></div>
+</section>
+
+<!-- ==================== ЭКРАН 3: КАРТОЧКА ==================== -->
+<section class="screen" id="card">
+  <div class="bar">
+    <button class="btn-back" onclick="showCatalog()" data-t="bList">← К списку</button>
+    <h2 id="cardTitle"></h2>
+  </div>
+  <div class="pane">
+    <div class="info" id="cardInfo"></div>
+    <div class="preview">
+      <div class="cap" data-t="cap">Так выглядит бланк</div>
+      <div class="frame" id="prevFrame"><div id="previewHost"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== ЭКРАН 4: БЛАНК ==================== -->
+<section class="screen" id="blank">
+  <div class="bar">
+    <button class="btn-back" onclick="showCard()" data-t="bBack">← Назад</button>
+    <span class="hintline" data-t="pHint">Распечатайте бланк и заполните его ручкой</span>
+    <button class="btn-print" onclick="doPrint()" data-t="bPrint">Печать бланка</button>
+  </div>
+  <div class="pane">
+    <div class="mydata">
+      <h4 data-t="mdTitle">Ваши данные — подставятся в бланк</h4>
+      <div class="fields">
+        <div><label data-t="fFio">Ф.И.О. полностью</label><input id="f-fio" autocomplete="off"></div>
+        <div><label data-t="fGroup">Курс и группа</label><input id="f-group" autocomplete="off"></div>
+        <div><label data-t="fSpec">Специальность</label><input id="f-spec" autocomplete="off"></div>
+        <div><label data-t="fInst">Институт</label><input id="f-inst" autocomplete="off"></div>
+        <div><label data-t="fIin">ИИН</label><input id="f-iin" autocomplete="off" inputmode="numeric"></div>
+        <div><label data-t="fTel">Телефон</label><input id="f-tel" autocomplete="off" inputmode="tel"></div>
+        <div><label data-t="fMail">E-mail</label><input id="f-mail" autocomplete="off"></div>
+      </div>
+      <div class="row">
+        <button class="mini clear-btn" onclick="clearSheet()" data-t="bClear">Очистить бланк</button>
+        <span class="note-line" data-t="mdNote">Остальные поля заполните прямо в бланке — коснитесь жёлтой строки и введите текст.</span>
+      </div>
+    </div>
+    <div id="blankHost"></div>
+  </div>
+</section>
+
+<div class="idle" id="idle"></div>
+
+<script>
+/* ==================== НАСТРОЙКИ ==================== */
+const CONFIG = {
+  platonus: "https://edu.enu.kz/index",
+  enu:      "https://www.enu.kz/",
+  idleSeconds: 150,
+  warnSeconds: 15
+};
+
+/* ==================== ДАННЫЕ КАТАЛОГА ==================== */
+/* ============================================================================
+   templates.js — КАТАЛОГ ЗАЯВЛЕНИЙ ИЦНиИИ
+   ----------------------------------------------------------------------------
+   Собран из Word-шаблонов деканата IDSAI.
+   Правьте только этот файл, чтобы изменить список, подсказки или категории.
+
+   Поля каждой записи:
+     id     — техническое имя (латиницей)
+     cat    — категория из CATEGORIES ниже
+     ru/kk  — название заявления
+     files  — файлы бланков в папке templates для каждого языка
+     about  — одно предложение: зачем это заявление
+     need   — что взять с собой
+     appr   — кто согласовывает (из самого бланка)
+     where  — куда сдавать  ← ЗАПОЛНИТЕ НОМЕРА КАБИНЕТОВ
+     tips   — подсказки по заполнению
+   ============================================================================ */
+
+/* Куда сдавать — общий текст для всех заявлений.
+   Впишите реальный кабинет деканата. */
+const WHERE = {
+  ru: "Деканат ИЦНиИИ, каб. ___",
+  kk: "ЦҒЖИИ деканаты, ___ каб."
+};
+
+const CATEGORIES = {
+  acad:    { ru: "Академический отпуск", kk: "Академиялық демалыс" },
+  move:    { ru: "Перевод, восстановление, отчисление", kk: "Ауысу, қайта қабылдау, оқудан шығу" },
+  study:   { ru: "Учёба, экзамены, задолженности", kk: "Оқу, емтихандар, қарыздар" },
+  ipk:     { ru: "Неформальное образование (ИПК)", kk: "Бейресми білім беру (ИПК)" },
+  money:   { ru: "Оплата и возврат средств", kk: "Төлем және қаражатты қайтару" },
+  other:   { ru: "Прочее", kk: "Басқа" },
+};
+
+const TEMPLATES = [
+
+  {
+    id:    "acad-health",
+    cat:   "acad",
+    ru:    "Академический отпуск по состоянию здоровья",
+    kk:    "Денсаулық жағдайы бойынша академиялық демалыс",
+    files: { ru: "acad-health-ru.html", kk: "acad-health-kk.html" },
+    about: { ru: "Перерыв в обучении по болезни. Оформляется на срок, указанный врачебно-консультационной комиссией.",
+              kk: "Ауруға байланысты оқудағы үзіліс. Дәрігерлік-консультациялық комиссия көрсеткен мерзімге ресімделеді." },
+    need:  { ru: ["Удостоверение личности", "Справка ВКК (врачебно-консультационной комиссии)", "Заключение ТОО «Клиника доктора Абдугалимова»"],
+              kk: ["Жеке куәлік", "ДКК (дәрігерлік-консультациялық комиссия) анықтамасы", "«Абдугалимов дәрігер клиникасы» ЖШС қорытындысы"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "ТОО «Клиника доктора Абдугалимова»", "Департамент финансов", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "«Абдугалимов дәрігер клиникасы» ЖШС", "Қаржы департаменті", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Заявление пишется на имя ректора Е.Б. Сыдыкова.", "Укажите точные даты начала и окончания отпуска.", "Без справки ВКК заявление не примут.", "Подавайте до начала экзаменационной сессии."],
+              kk: ["Өтініш ректор Е.Б. Сыдықовтың атына жазылады.", "Демалыстың басталу және аяқталу күндерін дәл көрсетіңіз.", "ДКК анықтамасы болмаса, өтініш қабылданбайды.", "Емтихан сессиясы басталғанға дейін тапсырыңыз."] }
+  },
+
+  {
+    id:    "acad-health-ext",
+    cat:   "acad",
+    ru:    "Продление академического отпуска (здоровье)",
+    kk:    "Академиялық демалысты ұзарту (денсаулық)",
+    files: { ru: "acad-health-ext-ru.html", kk: "acad-health-ext-kk.html" },
+    about: { ru: "Если срок академического отпуска по здоровью заканчивается, а лечение продолжается.",
+              kk: "Денсаулық бойынша академиялық демалыс мерзімі аяқталып, емделу жалғасса." },
+    need:  { ru: ["Удостоверение личности", "Новая справка ВКК"],
+              kk: ["Жеке куәлік", "Жаңа ДКК анықтамасы"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "ТОО «Клиника доктора Абдугалимова»", "Департамент финансов", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "«Абдугалимов дәрігер клиникасы» ЖШС", "Қаржы департаменті", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите и старый период отпуска, и новый — оба нужны.", "Подавайте до окончания текущего отпуска, а не после."],
+              kk: ["Ескі кезеңді де, жаңасын да көрсетіңіз — екеуі де қажет.", "Ағымдағы демалыс аяқталғанға дейін тапсырыңыз."] }
+  },
+
+  {
+    id:    "acad-army",
+    cat:   "acad",
+    ru:    "Академический отпуск по призыву в армию",
+    kk:    "Әскерге шақыруға байланысты академиялық демалыс",
+    files: { ru: "acad-army-ru.html", kk: "acad-army-kk.html" },
+    about: { ru: "Перерыв в обучении на время срочной службы в Вооружённых Силах РК.",
+              kk: "ҚР Қарулы Күштеріндегі мерзімді қызмет уақытына оқудағы үзіліс." },
+    need:  { ru: ["Удостоверение личности", "Копия повестки из военкомата"],
+              kk: ["Жеке куәлік", "Әскерге шақыру қағазының көшірмесі"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "Департамент финансов", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "Қаржы департаменті", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Даты берите из повестки, не «на глаз».", "Копию повестки приложите обязательно.", "После службы подаётся отдельное заявление о выходе из отпуска."],
+              kk: ["Күндерді шақыру қағазынан алыңыз.", "Шақыру қағазының көшірмесін міндетті түрде тіркеңіз.", "Қызметтен кейін демалыстан шығу туралы бөлек өтініш беріледі."] }
+  },
+
+  {
+    id:    "acad-child",
+    cat:   "acad",
+    ru:    "Академический отпуск по беременности / уходу за ребёнком",
+    kk:    "Жүктілік / бала күтіміне байланысты академиялық демалыс",
+    files: { ru: "acad-child-ru.html", kk: "acad-child-kk.html" },
+    about: { ru: "Перерыв в обучении по беременности или для ухода за ребёнком.",
+              kk: "Жүктілікке немесе бала күтіміне байланысты оқудағы үзіліс." },
+    need:  { ru: ["Удостоверение личности", "Справка о беременности — при беременности", "Копия свидетельства о рождении ребёнка — по уходу за ребёнком"],
+              kk: ["Жеке куәлік", "Жүктілік туралы анықтама — жүктілік бойынша", "Баланың туу туралы куәлігінің көшірмесі — бала күтімі бойынша"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "ТОО «Клиника доктора Абдугалимова»", "Департамент финансов", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "«Абдугалимов дәрігер клиникасы» ЖШС", "Қаржы департаменті", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["В бланке подчеркните нужное: «по беременности» или «по уходу за ребёнком».", "Укажите обе даты — начало и конец отпуска."],
+              kk: ["Бланкіде қажеттісінің астын сызыңыз: «жүктілігіме» немесе «бала күтуіме».", "Екі күнді де көрсетіңіз — басы мен соңы."] }
+  },
+
+  {
+    id:    "acad-child-ext",
+    cat:   "acad",
+    ru:    "Продление отпуска по уходу за ребёнком",
+    kk:    "Бала күтімі бойынша демалысты ұзарту",
+    files: { ru: "acad-child-ext-kk.html", kk: "acad-child-ext-kk.html" },
+    about: { ru: "Продление академического отпуска по беременности или уходу за ребёнком. Бланк только на казахском языке.",
+              kk: "Жүктілік немесе бала күтімі бойынша академиялық демалысты ұзарту." },
+    need:  { ru: ["Удостоверение личности", "Копия свидетельства о рождении ребёнка"],
+              kk: ["Жеке куәлік", "Туу туралы куәліктің көшірмесі"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "ТОО «Клиника доктора Абдугалимова»", "Департамент финансов", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "«Абдугалимов дәрігер клиникасы» ЖШС", "Қаржы департаменті", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Русского бланка в комплекте деканата нет — используйте казахский.", "Укажите новый период отпуска."],
+              kk: ["Демалыстың жаңа кезеңін көрсетіңіз.", "Туу туралы куәліктің көшірмесін тіркеңіз."] }
+  },
+
+  {
+    id:    "acad-exit",
+    cat:   "acad",
+    ru:    "Выход из академического отпуска",
+    kk:    "Академиялық демалыстан шығу",
+    files: { ru: "acad-exit-ru.html", kk: "acad-exit-kk.html" },
+    about: { ru: "Возвращение к занятиям после академического отпуска. Подаётся до начала семестра.",
+              kk: "Академиялық демалыстан кейін сабаққа оралу. Семестр басталғанға дейін тапсырылады." },
+    need:  { ru: ["Удостоверение личности", "Подтверждающий документ: справка ВКК, копия свидетельства о рождении или копия военного билета"],
+              kk: ["Жеке куәлік", "Растау құжаты: ДКК анықтамасы, туу туралы куәліктің немесе әскери билеттің көшірмесі"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "ТОО «Клиника доктора Абдугалимова»", "Департамент финансов", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "«Абдугалимов дәрігер клиникасы» ЖШС", "Қаржы департаменті", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["В бланке подчеркните, какой именно документ прикладываете.", "Укажите дату выхода на занятия — она должна совпадать с началом семестра."],
+              kk: ["Бланкіде қай құжатты тіркеп отырғаныңыздың астын сызыңыз.", "Сабаққа шығу күнін көрсетіңіз — ол семестрдің басымен сәйкес келуі керек."] }
+  },
+
+  {
+    id:    "transfer-op",
+    cat:   "move",
+    ru:    "Перевод с одной ГОП на другую",
+    kk:    "Бір БББТ-дан басқа БББТ-ға ауысу",
+    files: { ru: "transfer-op-ru.html", kk: "transfer-op-kk.html" },
+    about: { ru: "Смена группы образовательных программ / образовательной программы внутри университета.",
+              kk: "Университет ішінде білім беру бағдарламалары тобын / бағдарламаны ауыстыру." },
+    need:  { ru: ["Удостоверение личности", "Транскрипт", "Согласие принимающей кафедры"],
+              kk: ["Жеке куәлік", "Транскрипт", "Қабылдаушы кафедраның келісімі"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Обязательно укажите КОД и НАИМЕНОВАНИЕ обеих программ — и текущей, и желаемой.", "Коды берите из своего договора или в офисе регистратора, не по памяти.", "После перевода может появиться академическая разница — её придётся закрывать."],
+              kk: ["Екі бағдарламаның да КОДЫ мен АТАУЫН міндетті түрде көрсетіңіз.", "Кодтарды шартыңыздан немесе тіркеу офисінен алыңыз.", "Ауысқаннан кейін академиялық айырмашылық пайда болуы мүмкін."] }
+  },
+
+  {
+    id:    "transfer-lang",
+    cat:   "move",
+    ru:    "Перевод на другое языковое отделение",
+    kk:    "Басқа тіл бөліміне ауысу",
+    files: { ru: "transfer-lang-ru.html", kk: "transfer-lang-ru.html" },
+    about: { ru: "Смена языка обучения — с казахского на русский или наоборот. Бланк только на русском языке.",
+              kk: "Оқыту тілін ауыстыру. Бланк тек орыс тілінде берілген." },
+    need:  { ru: ["Удостоверение личности", "Транскрипт"],
+              kk: ["Жеке куәлік", "Транскрипт"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите код и наименование специальности.", "В бланке есть ссылка на Правила перевода — прочитайте их до подписания.", "Возможна академическая разница по языковым дисциплинам."],
+              kk: ["Мамандықтың кодын және атауын көрсетіңіз.", "Бланкіде ауысу ережелеріне сілтеме бар — қол қоймас бұрын оқыңыз."] }
+  },
+
+  {
+    id:    "transfer-univ",
+    cat:   "move",
+    ru:    "Перевод в другой вуз",
+    kk:    "Басқа ЖОО-ға ауысу",
+    files: { ru: "transfer-univ-kk.html", kk: "transfer-univ-kk.html" },
+    about: { ru: "Перевод из ЕНУ в другое высшее учебное заведение. Бланк только на казахском языке.",
+              kk: "ЕҰУ-дан басқа жоғары оқу орнына ауысу." },
+    need:  { ru: ["Удостоверение личности", "Транскрипт", "Согласие принимающего вуза"],
+              kk: ["Жеке куәлік", "Транскрипт", "Қабылдаушы ЖОО-ның келісімі"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "Департамент финансов", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "Қаржы департаменті", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите полное наименование принимающего вуза.", "Сначала получите согласие принимающего вуза, потом подавайте здесь.", "Перед выдачей документов нужен обходной лист."],
+              kk: ["Қабылдаушы ЖОО-ның толық атауын көрсетіңіз.", "Алдымен қабылдаушы ЖОО-ның келісімін алыңыз.", "Құжаттарды алу алдында айналып өту парағы қажет."] }
+  },
+
+  {
+    id:    "restore",
+    cat:   "move",
+    ru:    "Восстановление на обучение",
+    kk:    "Оқуға қайта қабылдау",
+    files: { ru: "restore-kk.html", kk: "restore-kk.html" },
+    about: { ru: "Возвращение на обучение после отчисления. Бланк только на казахском языке.",
+              kk: "Оқудан шығарылғаннан кейін оқуға қайта оралу." },
+    need:  { ru: ["Удостоверение личности", "Транскрипт или академическая справка", "Документ об образовании"],
+              kk: ["Жеке куәлік", "Транскрипт немесе академиялық анықтама", "Білімі туралы құжат"] },
+    appr:  { ru: ["Директор института", "Заведующий кафедрой"],
+              kk: ["Институт директоры", "Кафедра меңгерушісі"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите год и семестр, с которого хотите восстановиться.", "Восстановление возможно только на такую же или родственную образовательную программу.", "Возможна академическая разница."],
+              kk: ["Қай жылдан және семестрден қайта қабылданғыңыз келетінін көрсетіңіз.", "Қайта қабылдау сол немесе туыстас бағдарламаға ғана мүмкін."] }
+  },
+
+  {
+    id:    "expel-own",
+    cat:   "move",
+    ru:    "Отчисление по собственному желанию",
+    kk:    "Өз еркімен оқудан шығу",
+    files: { ru: "expel-own-ru.html", kk: "expel-own-kk.html" },
+    about: { ru: "Добровольное прекращение обучения в университете.",
+              kk: "Университеттегі оқуды өз еркімен тоқтату." },
+    need:  { ru: ["Удостоверение личности", "Студенческий билет", "Зачётная книжка", "Обходной лист"],
+              kk: ["Жеке куәлік", "Студенттік билет", "Сынақ кітапшасы", "Айналып өту парағы"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите точную дату, с которой просите отчислить.", "Документы об образовании выдают только после сдачи обходного листа.", "Если учитесь по гранту — уточните последствия в департаменте финансов."],
+              kk: ["Қай күннен бастап шығаруды сұрайтыныңызды дәл көрсетіңіз.", "Білім туралы құжаттар айналып өту парағын тапсырғаннан кейін ғана беріледі."] }
+  },
+
+  {
+    id:    "repeat-gpa",
+    cat:   "move",
+    ru:    "Повторное обучение из-за низкого GPA",
+    kk:    "Төмен GPA бойынша қайта оқу",
+    files: { ru: "repeat-gpa-ru.html", kk: "repeat-gpa-kk.html" },
+    about: { ru: "Остаться на повторный курс, если переводной балл GPA ниже установленного порога.",
+              kk: "Ауыспалы GPA балы белгіленген шектен төмен болса, курсты қайта оқу." },
+    need:  { ru: ["Удостоверение личности", "Транскрипт с GPA"],
+              kk: ["Жеке куәлік", "GPA көрсетілген транскрипт"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите номер курса, который остаётесь проходить повторно.", "Повторный курс — платный, уточните сумму в департаменте финансов.", "Перед подачей подпишите расписку об академической задолженности."],
+              kk: ["Қайта оқитын курстың нөмірін көрсетіңіз.", "Қайта оқу ақылы — сомасын қаржы департаментінен нақтылаңыз."] }
+  },
+
+  {
+    id:    "repeat-debt",
+    cat:   "move",
+    ru:    "Повторное обучение из-за академической задолженности",
+    kk:    "Академиялық қарыз бойынша қайта оқу",
+    files: { ru: "repeat-debt-ru.html", kk: "repeat-debt-kk.html" },
+    about: { ru: "Остаться на повторный курс при наличии непогашенной академической задолженности.",
+              kk: "Өтелмеген академиялық қарыз болған жағдайда курсты қайта оқу." },
+    need:  { ru: ["Удостоверение личности", "Транскрипт", "Расписка об ознакомлении с задолженностью"],
+              kk: ["Жеке куәлік", "Транскрипт", "Қарызбен танысу туралы қолхат"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите номер курса.", "Сначала попробуйте закрыть задолженность через летний семестр или ИПК — это дешевле повторного курса."],
+              kk: ["Курс нөмірін көрсетіңіз.", "Алдымен қарызды жазғы семестр немесе ИПК арқылы жабуға тырысыңыз — бұл арзанырақ."] }
+  },
+
+  {
+    id:    "change-data",
+    cat:   "move",
+    ru:    "Смена персональных данных (ФИО)",
+    kk:    "Дербес деректерді өзгерту (аты-жөні)",
+    files: { ru: "change-data-kk.html", kk: "change-data-kk.html" },
+    about: { ru: "Изменение фамилии, имени или отчества в документах университета. Бланк только на казахском языке.",
+              kk: "Университет құжаттарындағы тегін, атын немесе әкесінің атын өзгерту." },
+    need:  { ru: ["Новое удостоверение личности", "Копия документа-основания (свидетельство о браке, о смене имени)"],
+              kk: ["Жаңа жеке куәлік", "Негіздеме құжаттың көшірмесі (неке туралы, атын өзгерту туралы куәлік)"] },
+    appr:  { ru: ["Директор института", "Офис регистратора"],
+              kk: ["Институт директоры", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Впишите и старые данные, и новые — оба поля обязательны.", "Копии подтверждающих документов приложите к заявлению.", "Подавайте сразу после смены документов, иначе диплом выпишут на старое имя."],
+              kk: ["Ескі деректі де, жаңасын да жазыңыз — екеуі де міндетті.", "Растайтын құжаттардың көшірмесін тіркеңіз.", "Құжаттар ауысқан бойда тапсырыңыз, әйтпесе диплом ескі атқа жазылады."] }
+  },
+
+  {
+    id:    "change-data-fix",
+    cat:   "move",
+    ru:    "Исправление ошибки в написании данных",
+    kk:    "Деректердің жазылуындағы қатені түзету",
+    files: { ru: "change-data-fix-kk.html", kk: "change-data-fix-kk.html" },
+    about: { ru: "Если данные в документах университета записаны с ошибкой перевода. Бланк только на казахском языке.",
+              kk: "Университет құжаттарында деректер аударма қатесімен жазылған жағдайда." },
+    need:  { ru: ["Удостоверение личности", "Копия документа с правильным написанием"],
+              kk: ["Жеке куәлік", "Дұрыс жазылған құжаттың көшірмесі"] },
+    appr:  { ru: ["Директор института", "Офис регистратора"],
+              kk: ["Институт директоры", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите, как записано сейчас и как должно быть.", "Приложите копию удостоверения личности как доказательство."],
+              kk: ["Қазір қалай жазылғанын және қалай болуы керектігін көрсетіңіз.", "Дәлел ретінде жеке куәліктің көшірмесін тіркеңіз."] }
+  },
+
+  {
+    id:    "bypass-sheet",
+    cat:   "move",
+    ru:    "Обходной лист",
+    kk:    "Айналып өту парағы",
+    files: { ru: "bypass-sheet-ru.html", kk: "bypass-sheet-ru.html" },
+    about: { ru: "Лист с подписями подразделений. Нужен при отчислении, переводе и выпуске — без него не выдадут документы об образовании.",
+              kk: "Бөлімшелердің қолы қойылатын парақ. Оқудан шығу, ауысу және бітіру кезінде қажет." },
+    need:  { ru: ["Студенческий билет", "Зачётная книжка", "Сданные книги из библиотеки"],
+              kk: ["Студенттік билет", "Сынақ кітапшасы", "Кітапханаға тапсырылған кітаптар"] },
+    appr:  { ru: ["Директор института", "Кафедра (для выпускников)", "Комендант общ. №4", "Паспортист общ. №6", "Спецчасть (для мужчин)", "Библиотека", "ТОО «Клиника доктора Абдугалимова»", "Бухгалтерия"],
+              kk: ["Институт директоры", "Кафедра (түлектер үшін)", "№4 жатақхана коменданты", "№6 жатақхана паспортисі", "Арнайы бөлім (ер адамдар үшін)", "Кітапхана", "«Абдугалимов дәрігер клиникасы» ЖШС", "Бухгалтерия"] },
+    where: WHERE,
+    tips:  { ru: ["Выпускники сдают обходной лист на кафедру.", "Отчисленные сдают в каб. 115 вместе со студенческим билетом и зачётной книжкой.", "Адреса подразделений указаны прямо в бланке — обходите по порядку."],
+              kk: ["Түлектер айналып өту парағын кафедраға тапсырады.", "Оқудан шығарылғандар 115-кабинетке студенттік билет пен сынақ кітапшасымен бірге тапсырады."] }
+  },
+
+  {
+    id:    "fx-retake",
+    cat:   "study",
+    ru:    "Пересдача экзамена при оценке FX",
+    kk:    "FX бағасы кезінде емтиханды қайта тапсыру",
+    files: { ru: "fx-retake-ru.html", kk: "fx-retake-kk.html" },
+    about: { ru: "Если на экзамене вы набрали от 25 до 49 баллов и получили FX — можно пересдать бесплатно, без повторного изучения дисциплины.",
+              kk: "Емтиханда 25-49 балл жинап, FX алсаңыз — пәнді қайта оқымай, тегін қайта тапсыруға болады." },
+    need:  { ru: ["Удостоверение личности", "Транскрипт или скриншот оценки из Platonus"],
+              kk: ["Жеке куәлік", "Транскрипт немесе Platonus-тан баға скриншоты"] },
+    appr:  { ru: ["Директор института Ш.Ж. Сеилов"],
+              kk: ["Институт директоры Ш.Ж. Сеилов"] },
+    where: WHERE,
+    tips:  { ru: ["Заявление подаётся на имя директора института, а не ректора.", "Укажите точное название дисциплины и набранный балл.", "Нужны ФИО и телефон старосты группы — впишите их.", "Пересдать можно в период сессии или каникул."],
+              kk: ["Өтініш ректорға емес, институт директорына жазылады.", "Пәннің дәл атауын және жинаған балыңызды көрсетіңіз.", "Топ старостасының аты-жөні мен телефоны қажет.", "Сессия немесе демалыс кезінде қайта тапсыруға болады."] }
+  },
+
+  {
+    id:    "appeal",
+    cat:   "study",
+    ru:    "Апелляция по результатам экзамена",
+    kk:    "Емтихан нәтижесі бойынша апелляция",
+    files: { ru: "appeal-ru.html", kk: "appeal-ru.html" },
+    about: { ru: "Оспаривание вопросов экзаменационного билета или теста. Бланк только на русском языке.",
+              kk: "Емтихан билеті немесе тест сұрақтарына шағымдану. Бланк тек орыс тілінде." },
+    need:  { ru: ["Удостоверение личности", "Экзаменационный билет или номер варианта", "Ссылки на учебные источники"],
+              kk: ["Жеке куәлік", "Емтихан билеті немесе нұсқа нөмірі", "Оқу дереккөздеріне сілтемелер"] },
+    appr:  { ru: ["Директор института Ш.Ж. Сеилов", "Сотрудник деканата (регистрация)"],
+              kk: ["Институт директоры Ш.Ж. Сеилов", "Деканат қызметкері (тіркеу)"] },
+    where: WHERE,
+    tips:  { ru: ["Подаётся не позднее следующего рабочего дня после экзамена.", "Укажите номера конкретных вопросов, а не «весь билет».", "Возможные причины перечислены в бланке — отметьте подходящую.", "Ссылки на учебник или лекцию усиливают апелляцию."],
+              kk: ["Емтиханнан кейінгі келесі жұмыс күнінен кешіктірмей беріледі.", "Нақты сұрақтардың нөмірлерін көрсетіңіз.", "Ықтимал себептер бланкіде берілген — қажеттісін белгілеңіз."] }
+  },
+
+  {
+    id:    "absence-platonus",
+    cat:   "study",
+    ru:    "Отработка пропущенных занятий (открыть Platonus)",
+    kk:    "Өткізіп алған сабақтарды өтеу (Platonus ашу)",
+    files: { ru: "absence-platonus-ru.html", kk: "absence-platonus-kk.html" },
+    about: { ru: "Просьба открыть электронный журнал Platonus, чтобы отработать занятия, пропущенные по уважительной причине.",
+              kk: "Дәлелді себеппен өткізіп алған сабақтарды өтеу үшін Platonus электрондық журналын ашу туралы өтініш." },
+    need:  { ru: ["Удостоверение личности", "Документ, подтверждающий причину пропуска (справка, повестка, приказ)"],
+              kk: ["Жеке куәлік", "Себепті растайтын құжат (анықтама, шақыру қағазы, бұйрық)"] },
+    appr:  { ru: ["Директор института Ш.Ж. Сеилов"],
+              kk: ["Институт директоры Ш.Ж. Сеилов"] },
+    where: WHERE,
+    tips:  { ru: ["Перечислите дисциплины с типом занятия: лекция, практика, лаборатория, СРС.", "Обязательно укажите номер недели по каждому занятию.", "Точно напишите период пропуска — с какой даты по какую.", "Без подтверждающего документа журнал не откроют."],
+              kk: ["Пәндерді сабақ түрімен көрсетіңіз: дәріс, практика, зертхана, СӨЖ.", "Әр сабақ бойынша апта нөмірін міндетті түрде жазыңыз.", "Өткізіп алған кезеңді дәл жазыңыз.", "Растау құжатысыз журнал ашылмайды."] }
+  },
+
+  {
+    id:    "acad-diff",
+    cat:   "study",
+    ru:    "Изучение дисциплин с академической разницей",
+    kk:    "Академиялық айырмашылығы бар пәндерді оқу",
+    files: { ru: "acad-diff-ru.html", kk: "acad-diff-kk.html" },
+    about: { ru: "Дополнительное изучение дисциплин, которых не было в вашем учебном плане после перевода или восстановления.",
+              kk: "Ауысқаннан немесе қайта қабылданғаннан кейін оқу жоспарында болмаған пәндерді қосымша оқу." },
+    need:  { ru: ["Удостоверение личности", "Транскрипт", "Список дисциплин разницы из офиса регистратора"],
+              kk: ["Жеке куәлік", "Транскрипт", "Тіркеу офисінен айырмашылық пәндерінің тізімі"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["По каждой дисциплине укажите количество кредитов ECTS.", "Список дисциплин возьмите в офисе регистратора, не составляйте сами.", "Изучение разницы платное — уточните стоимость заранее."],
+              kk: ["Әр пән бойынша ECTS кредит санын көрсетіңіз.", "Пәндер тізімін тіркеу офисінен алыңыз.", "Айырмашылықты оқу ақылы — құнын алдын ала нақтылаңыз."] }
+  },
+
+  {
+    id:    "acad-debt-subj",
+    cat:   "study",
+    ru:    "Изучение дисциплин с академической задолженностью",
+    kk:    "Академиялық қарызы бар пәндерді оқу",
+    files: { ru: "acad-debt-subj-ru.html", kk: "acad-debt-subj-kk.html" },
+    about: { ru: "Повторное изучение дисциплин, по которым осталась академическая задолженность.",
+              kk: "Академиялық қарыз қалған пәндерді қайта оқу." },
+    need:  { ru: ["Удостоверение личности", "Транскрипт с задолженностями"],
+              kk: ["Жеке куәлік", "Қарыздары көрсетілген транскрипт"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите наименование дисциплин и количество кредитов.", "Проверьте семестр — заявление подаётся на конкретный семестр учебного года.", "Повторное изучение платное."],
+              kk: ["Пәндердің атауын және кредит санын көрсетіңіз.", "Семестрді тексеріңіз — өтініш нақты семестрге беріледі.", "Қайта оқу ақылы."] }
+  },
+
+  {
+    id:    "summer-cancel",
+    cat:   "study",
+    ru:    "Исключение дисциплин из летнего семестра",
+    kk:    "Жазғы семестрден пәндерді алып тастау",
+    files: { ru: "summer-cancel-ru.html", kk: "summer-cancel-kk.html" },
+    about: { ru: "Отказ от ранее заявленных дисциплин летнего семестра — например, из-за финансовых трудностей.",
+              kk: "Бұрын мәлімделген жазғы семестр пәндерінен бас тарту — мысалы, қаржылық қиындықтарға байланысты." },
+    need:  { ru: ["Удостоверение личности", "Список заявленных дисциплин"],
+              kk: ["Жеке куәлік", "Мәлімделген пәндер тізімі"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры"] },
+    where: WHERE,
+    tips:  { ru: ["Обязательно укажите причину — без неё заявление не рассмотрят.", "Перечислите только те дисциплины, которые хотите убрать.", "Подавайте до начала летнего семестра, потом деньги не вернут."],
+              kk: ["Себебін міндетті түрде көрсетіңіз.", "Тек алып тастағыңыз келетін пәндерді жазыңыз.", "Жазғы семестр басталғанға дейін тапсырыңыз."] }
+  },
+
+  {
+    id:    "receipt-debt",
+    cat:   "study",
+    ru:    "Расписка об ознакомлении с академической задолженностью",
+    kk:    "Академиялық қарызбен танысу туралы қолхат",
+    files: { ru: "receipt-debt-ru.html", kk: "receipt-debt-kk.html" },
+    about: { ru: "Подтверждение, что кафедра сообщила вам о задолженности и разъяснила сроки и последствия.",
+              kk: "Кафедраның қарыз туралы хабарлағанын және мерзімдер мен салдарды түсіндіргенін растау." },
+    need:  { ru: ["Удостоверение личности", "Список задолженностей с кафедры"],
+              kk: ["Жеке куәлік", "Кафедрадан қарыздар тізімі"] },
+    appr:  { ru: ["Заведующий кафедрой", "И.о. директора института Ш.Ж. Сеилов"],
+              kk: ["Кафедра меңгерушісі", "Институт директорының м.а. Ш.Ж. Сеилов"] },
+    where: WHERE,
+    tips:  { ru: ["Перечислите все дисциплины с задолженностью — их называет кафедра.", "Подписывая, вы подтверждаете, что знаете о риске остаться на повторный курс.", "Оставьте себе копию с отметкой о приёме."],
+              kk: ["Қарызы бар барлық пәндерді жазыңыз — оларды кафедра атайды.", "Қол қою арқылы қайта оқу қаупін білетініңізді растайсыз.", "Қабылданғаны туралы белгісі бар көшірмені өзіңізде қалдырыңыз."] }
+  },
+
+  {
+    id:    "diploma-redefense",
+    cat:   "study",
+    ru:    "Допуск к повторной защите дипломной работы",
+    kk:    "Дипломдық жұмысты қайта қорғауға жіберу",
+    files: { ru: "diploma-redefense-ru.html", kk: "diploma-redefense-ru.html" },
+    about: { ru: "Если вы не смогли явиться на защиту диплома, можно попросить допуск к повторной защите. Бланк только на русском языке.",
+              kk: "Диплом қорғауға келе алмаған жағдайда қайта қорғауға жіберуді сұрауға болады. Бланк тек орыс тілінде." },
+    need:  { ru: ["Удостоверение личности", "Документ, подтверждающий причину неявки", "Транскрипт"],
+              kk: ["Жеке куәлік", "Келмеу себебін растайтын құжат", "Транскрипт"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "Департамент финансов", "Офис регистратора"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "Қаржы департаменті", "Тіркеу офисі"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите год пропущенной защиты и год, в котором просите защититься.", "Впишите код и наименование своей специальности.", "Повторная защита обычно платная — уточните в департаменте финансов."],
+              kk: ["Өткізіп алған қорғау жылын және қорғағыңыз келетін жылды көрсетіңіз.", "Мамандығыңыздың кодын және атауын жазыңыз."] }
+  },
+
+  {
+    id:    "ipk-extra",
+    cat:   "ipk",
+    ru:    "ИПК: изучение дисциплин сверх учебного плана",
+    kk:    "ИПК: оқу жоспарынан тыс пәндерді оқу",
+    files: { ru: "ipk-extra-ru.html", kk: "ipk-extra-ru.html" },
+    about: { ru: "Дополнительные дисциплины по программе неформального образования — сверх обязательного учебного плана.",
+              kk: "Бейресми білім беру бағдарламасы бойынша қосымша пәндер — міндетті оқу жоспарынан тыс." },
+    need:  { ru: ["Копия документа, удостоверяющего личность"],
+              kk: ["Жеке басты куәландыратын құжаттың көшірмесі"] },
+    appr:  { ru: ["Директор института"],
+              kk: ["Институт директоры"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите наименование дисциплин И количество кредитов.", "Обязательно впишите сроки изучения и язык обучения.", "Бланки ИПК есть только на русском языке."],
+              kk: ["Пәндердің атауын ЖӘНЕ кредит санын көрсетіңіз.", "Оқу мерзімі мен оқыту тілін міндетті түрде жазыңыз.", "ИПК бланкілері тек орыс тілінде."] }
+  },
+
+  {
+    id:    "ipk-prereq",
+    cat:   "ipk",
+    ru:    "ИПК: освоение пререквизитов",
+    kk:    "ИПК: пререквизиттерді меңгеру",
+    files: { ru: "ipk-prereq-ru.html", kk: "ipk-prereq-ru.html" },
+    about: { ru: "Изучение дисциплин-пререквизитов, которых не хватает для поступления или продолжения обучения.",
+              kk: "Түсу немесе оқуды жалғастыру үшін жетіспейтін пререквизит пәндерді оқу." },
+    need:  { ru: ["Копия документа, удостоверяющего личность"],
+              kk: ["Жеке басты куәландыратын құжаттың көшірмесі"] },
+    appr:  { ru: ["Директор института"],
+              kk: ["Институт директоры"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите код и наименование образовательной программы и год окончания.", "Перечислите дисциплины с количеством кредитов.", "Список пререквизитов возьмите на кафедре."],
+              kk: ["Білім беру бағдарламасының кодын, атауын және бітірген жылын көрсетіңіз.", "Пәндерді кредит санымен жазыңыз."] }
+  },
+
+  {
+    id:    "ipk-debt",
+    cat:   "ipk",
+    ru:    "ИПК: ликвидация академической задолженности",
+    kk:    "ИПК: академиялық қарызды жою",
+    files: { ru: "ipk-debt-ru.html", kk: "ipk-debt-ru.html" },
+    about: { ru: "Закрытие академической задолженности через неформальное образование — альтернатива повторному курсу.",
+              kk: "Бейресми білім беру арқылы академиялық қарызды жабу — қайта оқуға балама." },
+    need:  { ru: ["Копия документа, удостоверяющего личность", "Копия документа об образовании: академическая справка или транскрипт"],
+              kk: ["Жеке басты куәландыратын құжаттың көшірмесі", "Білімі туралы құжаттың көшірмесі: академиялық анықтама немесе транскрипт"] },
+    appr:  { ru: ["Директор института"],
+              kk: ["Институт директоры"] },
+    where: WHERE,
+    tips:  { ru: ["Транскрипт приложить обязательно — без него заявление не примут.", "Перечислите все дисциплины с задолженностью и кредиты.", "Обычно дешевле и быстрее, чем повторный курс."],
+              kk: ["Транскриптті міндетті түрде тіркеңіз.", "Қарызы бар барлық пәндерді және кредиттерді жазыңыз.", "Әдетте қайта оқуға қарағанда арзан және жылдам."] }
+  },
+
+  {
+    id:    "ipk-gpa",
+    cat:   "ipk",
+    ru:    "ИПК: повышение переводного балла GPA",
+    kk:    "ИПК: ауыспалы GPA балын арттыру",
+    files: { ru: "ipk-gpa-ru.html", kk: "ipk-gpa-ru.html" },
+    about: { ru: "Пересдача дисциплин через неформальное образование, чтобы поднять GPA до переводного порога.",
+              kk: "GPA-ны ауыспалы шекке дейін көтеру үшін пәндерді бейресми білім беру арқылы қайта тапсыру." },
+    need:  { ru: ["Копия документа, удостоверяющего личность", "Транскрипт с текущим GPA"],
+              kk: ["Жеке басты куәландыратын құжаттың көшірмесі", "Ағымдағы GPA көрсетілген транскрипт"] },
+    appr:  { ru: ["Директор института"],
+              kk: ["Институт директоры"] },
+    where: WHERE,
+    tips:  { ru: ["Выбирайте дисциплины с самыми низкими оценками — так GPA вырастет сильнее.", "Укажите сроки изучения и язык обучения.", "Успейте до приказа о переводе на следующий курс."],
+              kk: ["Бағасы ең төмен пәндерді таңдаңыз.", "Оқу мерзімі мен тілін көрсетіңіз.", "Келесі курсқа көшіру бұйрығына дейін үлгеріңіз."] }
+  },
+
+  {
+    id:    "refund-grant",
+    cat:   "money",
+    ru:    "Возврат оплаты при переводе на вакантный грант",
+    kk:    "Бос грантқа ауысқанда төлемді қайтару",
+    files: { ru: "refund-grant-ru.html", kk: "refund-grant-kk.html" },
+    about: { ru: "Возврат уже внесённой оплаты за обучение, если вы стали обладателем освободившегося образовательного гранта.",
+              kk: "Босаған білім грантының иегері болсаңыз, төленген оқу ақысын қайтару." },
+    need:  { ru: ["Удостоверение личности", "Копия приказа о присуждении гранта", "Квитанция об оплате", "Реквизиты банковского счёта"],
+              kk: ["Жеке куәлік", "Грант тағайындау бұйрығының көшірмесі", "Төлем түбіртегі", "Банк шотының деректемелері"] },
+    appr:  { ru: ["Директор института", "Департамент финансов"],
+              kk: ["Институт директоры", "Қаржы департаменті"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите учебный год и период, за который просите возврат.", "Приложите реквизиты счёта — деньги перечисляют только на счёт студента.", "Возврат занимает время, подавайте сразу после приказа о гранте."],
+              kk: ["Оқу жылын және қайтаруды сұрайтын кезеңді көрсетіңіз.", "Шот деректемелерін тіркеңіз — ақша студенттің шотына ғана аударылады."] }
+  },
+
+  {
+    id:    "refund-double",
+    cat:   "money",
+    ru:    "Возврат ошибочно уплаченных денег",
+    kk:    "Қателесіп төленген ақшаны қайтару",
+    files: { ru: "refund-double-kk.html", kk: "refund-double-kk.html" },
+    about: { ru: "Возврат средств при двойной оплате или ошибке в платеже. Бланк только на казахском языке.",
+              kk: "Қос төлем немесе төлемдегі қате кезінде қаражатты қайтару." },
+    need:  { ru: ["Удостоверение личности", "Квитанции об обеих оплатах", "Реквизиты банковского счёта"],
+              kk: ["Жеке куәлік", "Екі төлемнің де түбіртектері", "Банк шотының деректемелері"] },
+    appr:  { ru: ["Директор института", "Департамент финансов"],
+              kk: ["Институт директоры", "Қаржы департаменті"] },
+    where: WHERE,
+    tips:  { ru: ["Укажите точную сумму к возврату и причину переплаты.", "Приложите обе квитанции — без них сумму не подтвердят."],
+              kk: ["Қайтарылатын нақты соманы және артық төлеу себебін көрсетіңіз.", "Екі түбіртекті де тіркеңіз."] }
+  },
+
+  {
+    id:    "pay-actual-univ",
+    cat:   "money",
+    ru:    "Оплата по фактическим дисциплинам (перевод из другого вуза)",
+    kk:    "Нақты пәндер бойынша төлем (басқа ЖОО-дан ауысу)",
+    files: { ru: "pay-actual-univ-ru.html", kk: "pay-actual-univ-kk.html" },
+    about: { ru: "Пересчёт оплаты за год по фактически изучаемым дисциплинам согласно индивидуальному учебному плану — после перевода из другого вуза.",
+              kk: "Басқа ЖОО-дан ауысқаннан кейін жеке оқу жоспары бойынша нақты оқылатын пәндер бойынша төлемді қайта есептеу." },
+    need:  { ru: ["Удостоверение личности", "Индивидуальный учебный план (ИУП)", "Транскрипт из прежнего вуза"],
+              kk: ["Жеке куәлік", "Жеке оқу жоспары (ЖОЖ)", "Бұрынғы ЖОО-дан транскрипт"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "Департамент финансов"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "Қаржы департаменті"] },
+    where: WHERE,
+    tips:  { ru: ["Перепишите дисциплины из своего ИУП с точным числом кредитов.", "Отдельно по каждому семестру, внизу — общая сумма ECTS.", "Сверьте список с офисом регистратора до подачи."],
+              kk: ["Пәндерді ЖОЖ-дан кредит санымен көшіріп жазыңыз.", "Әр семестр бойынша бөлек, төменде — жалпы ECTS сомасы.", "Тапсырар алдында тізімді тіркеу офисімен салыстырыңыз."] }
+  },
+
+  {
+    id:    "pay-actual-repeat",
+    cat:   "money",
+    ru:    "Оплата по фактическим дисциплинам (повторный курс)",
+    kk:    "Нақты пәндер бойынша төлем (қайта оқу курсы)",
+    files: { ru: "pay-actual-repeat-ru.html", kk: "pay-actual-repeat-kk.html" },
+    about: { ru: "Пересчёт оплаты, если вы остались на повторный курс и изучаете не полный набор дисциплин.",
+              kk: "Қайта оқу курсында қалып, пәндердің толық жиынтығын оқымасаңыз, төлемді қайта есептеу." },
+    need:  { ru: ["Удостоверение личности", "Индивидуальный учебный план (ИУП)", "Транскрипт"],
+              kk: ["Жеке куәлік", "Жеке оқу жоспары (ЖОЖ)", "Транскрипт"] },
+    appr:  { ru: ["Заведующий кафедрой", "Директор института", "Департамент финансов"],
+              kk: ["Кафедра меңгерушісі", "Институт директоры", "Қаржы департаменті"] },
+    where: WHERE,
+    tips:  { ru: ["Впишите только те дисциплины, которые действительно будете изучать.", "Укажите кредиты по каждой и общую сумму ECTS.", "Подавайте до выставления счёта за семестр."],
+              kk: ["Тек шынымен оқитын пәндерді жазыңыз.", "Әрқайсысы бойынша кредиттерді және жалпы ECTS сомасын көрсетіңіз.", "Семестрге шот шығарылғанға дейін тапсырыңыз."] }
+  },
+
+  {
+    id:    "free-form",
+    cat:   "other",
+    ru:    "Заявление в свободной форме",
+    kk:    "Еркін нысандағы өтініш",
+    files: { ru: "free-form-ru.html", kk: "free-form-kk.html" },
+    about: { ru: "Пустой бланк с готовой шапкой — для обращений, под которые нет отдельной формы.",
+              kk: "Дайын тақырыбы бар бос бланк — жеке нысаны жоқ өтініштер үшін." },
+    need:  { ru: ["Удостоверение личности", "Документы, подтверждающие вашу просьбу"],
+              kk: ["Жеке куәлік", "Өтінішіңізді растайтын құжаттар"] },
+    appr:  { ru: ["Директор института"],
+              kk: ["Институт директоры"] },
+    where: WHERE,
+    tips:  { ru: ["Пишите коротко и по существу: что просите и на каком основании.", "Обязательно укажите группу, курс и контактный телефон.", "Если прикладываете документы — перечислите их в конце заявления."],
+              kk: ["Қысқа әрі нақты жазыңыз: не сұрайсыз және қандай негізде.", "Тобыңызды, курсыңызды және байланыс телефоныңызды міндетті түрде көрсетіңіз.", "Құжат тіркесеңіз — оларды өтініштің соңында тізіп жазыңыз."] }
+  },
+
+];
+
+/* ==================== БЛАНКИ ==================== */
+const BLANKS = {"absence-platonus-kk.html": "<div class=\"to\">\n      <p>Л.Н.Гумилев атындағы ЕҰУ</p>\n      <p>Цифрлық ғылымдар және жасанды интеллект институтының директоры</p>\n      <p>Ш.Ж.Сеилов мырзаға</p>\n      <p><span class=\"fill m\"></span>тобының студенті</p>\n      <span class=\"note\">(шифр)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(аты-жөні)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(тел:)</span>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p>Мен <span class=\"fill l\"></span> , 2026ж. күндері аралығында, <span class=\"fill l\"></span>байланысты, өткізіп алған сабақтарды Platonus жүйесінен ашып, қайта тапсыруға рұқсат беруіңізді сұраймын.</p>\n      <p>Пән атауы – лек, прак, лаб, СӨЖ (апталар);</p>\n      <p>1.<span class=\"fill xl\"></span></p>\n      <p>2.<span class=\"fill xl\"></span></p>\n      <p>3.<span class=\"fill xl\"></span></p>\n      <p>4.<span class=\"fill xl\"></span></p>\n      <p>5.<span class=\"fill xl\"></span></p>\n      <p>Күні:</p>\n      <p>Қолы:</p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "absence-platonus-ru.html": "<div class=\"to\">\n      <p>Директору Института цифровых</p>\n      <p>наук и искусственного интеллекта Евразийского национального университета имени Л.Н. Гумилёва Сеилову Ш. Ж.</p>\n      <p>от студента</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О)</span>\n      <p>группы<span class=\"fill m\"></span></p>\n      <span class=\"note\">(шифр)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(тел.номер)</span>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Я, <span class=\"fill m\"></span>, не присутствовал(а) на занятиях <span class=\"fill s\"></span>2026г. по причине<span class=\"fill xl\"></span> и поэтому прошу открыть электронный журнал Platonus для отработки следующих предметов:</p>\n      <p>Наименование дисциплины - тип занятий: лекция, практика, лаб, (неделя)</p>\n      <p>1.<span class=\"fill xl\"></span></p>\n      <p>2.<span class=\"fill xl\"></span></p>\n      <p>3.<span class=\"fill xl\"></span></p>\n      <p>4.<span class=\"fill xl\"></span></p>\n      <p>5.<span class=\"fill xl\"></span></p>\n      <p>Дата:</p>\n      <p>Подпись:</p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "acad-army-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры,</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi,тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>ҚР әскери қызметіне шақыртылуыма байланысты 20<span class=\"fill s\"></span> жылдың«<span class=\"fill s\"></span>»<span class=\"fill m\"></span>20<span class=\"fill s\"></span>жылдың«<span class=\"fill s\"></span>» <span class=\"fill m\"></span>дейін академиялық демалысқа жiберуiңiздi сұраймын.</p>\n      <p>Әскерге шақыртылу куәлігінің көшірмесі тіркеледі.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Кафедра меңгерушісі <span class=\"fill m\"></span></p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n      <p>Тіркеу офисі <span class=\"fill m\"></span></p>\n  </div>", "acad-army-ru.html": "<div class=\"to\">\n      <p>Председателю правления - ректору</p>\n      <p>Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p>контактный тел. <span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас предоставить мне академический отпуск, в связи с призывом в Вооруженные Силы Республики Казахстан с «<span class=\"fill s\"></span>» <span class=\"fill m\"></span>20 <span class=\"fill s\"></span> года по «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20 <span class=\"fill s\"></span> года.</p>\n      <p>Копия повестки прилагается.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(подпись заявителя)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой <span class=\"fill m\"></span></p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n      <p>Департамент финансов <span class=\"fill m\"></span></p>\n      <p>Офис регистратора <span class=\"fill m\"></span></p>\n  </div>", "acad-child-ext-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi,тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Жүктілігіме байланысты / бала күтуіме байланысты 20<span class=\"fill s\"></span> жылдың</p>\n      <span class=\"note\">(қажеттінің астын сызу)</span>\n      <p>«<span class=\"fill s\"></span>»<span class=\"fill m\"></span>20<span class=\"fill s\"></span>жылдың«<span class=\"fill s\"></span>»<span class=\"fill l\"></span>дейін академиялық демалысты ұзартуға рұқсат беруіңізді сұраймын.</p>\n      <p>Туу туралы куәлік көшірмесі тіркеледі.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Кафедра меңгерушісі <span class=\"fill m\"></span></p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n      <p>ЖШС «Клиника доктора Абдугалимова» <span class=\"fill m\"></span></p>\n      <p>Қаржы департаменті <span class=\"fill m\"></span></p>\n      <p>Тіркеу офисі <span class=\"fill m\"></span></p>\n  </div>", "acad-child-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi,тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Жүктілігіме байланысты / бала күтуіме байланысты 20<span class=\"fill s\"></span> жылдың</p>\n      <span class=\"note\">(қажеттінің астын сызу)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span>20<span class=\"fill s\"></span>жылдың«<span class=\"fill s\"></span>» <span class=\"fill l\"></span>дейін академиялық демалысқа жiберуiңiздi сұраймын.</p>\n      <p>Жүктілік туралы анықтамасы тіркеледі.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Кафедра меңгерушісі <span class=\"fill m\"></span></p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n      <p>ЖШС «Клиника доктора Абдугалимова» <span class=\"fill m\"></span></p>\n      <p>Қаржы департаменті <span class=\"fill m\"></span></p>\n      <p>Тіркеу офисі <span class=\"fill m\"></span></p>\n  </div>", "acad-child-ru.html": "<div class=\"to\">\n      <p>Председателю правления - ректору</p>\n      <p>Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p>контактный тел. <span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас предоставить мне академический отпуск по беременности / по уходу за ребенком с«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> года по «<span class=\"fill s\"></span>»</p>\n      <span class=\"note\">(нужное подчеркнуть)</span>\n      <p><span class=\"fill m\"></span> 20<span class=\"fill s\"></span> года.</p>\n      <p>Копия свидетельства о рождении ребенка прилагается.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(подпись заявителя)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой<span class=\"fill m\"></span></p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n      <p>ТОО «Клиника доктора Абдугалимова» <span class=\"fill m\"></span></p>\n      <p>Департамент финансов <span class=\"fill m\"></span></p>\n      <p>Офис регистратора <span class=\"fill m\"></span></p>\n  </div>", "acad-debt-subj-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры,</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт, курс, тобы,)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi, тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(тел. e-mail)</span>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p>Сізден 2025-2026 оқу жылының 2 семестр бойынша келесі академиялық қарыздары бар пәндерді қосымша оқуға рұқсат беруіңізді сұраймын.</p>\n      <p><span class=\"fill xl\"></span>Пәндер тізімі (ECTS академиялық кредиттерін көрсете отырып*):</p>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(күні) \t\t\t\t\t\t\t\t\t\t(қолы)</span>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "acad-debt-subj-ru.html": "<div class=\"to\">\n      <p>Председателю Правления – Ректору ЕНУ им. Л.Н.Гумилева от<span class=\"fill xl\"></span>фамилия, имя, отчество <span class=\"fill l\"></span>Специальность</p>\n      <p><span class=\"fill l\"></span>курс, группа</p>\n      <p><span class=\"fill l\"></span>контактный телефон</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>e-mail</p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу разрешить с целью ликвидации академической задолженности изучение во 2 семестре 2025-2026 учебного года следующих дисциплин:</p>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(указать наименование дисциплин, количество кредитов)</span>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(дата)\t\t\t\t\t\t\t\t\t(подпись)</span>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "acad-diff-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры,</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт, курс, тобы,)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi, тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(тел. e-mail)</span>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p>Сізден 2025-2026 оқу жылының 2 семестр бойынша келесі академиялық айырмашылығы бар пәндерді қосымша оқуға рұқсат беруіңізді сұраймын.</p>\n      <p><span class=\"fill xl\"></span></p>\n      <p>(Пәндер тізімі (ECTS академиялық кредиттерін көрсете отырып*):</p>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(күні) \t\t\t\t\t\t\t\t\t\t(қолы)</span>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "acad-diff-ru.html": "<div class=\"to\">\n      <p>Председателю Правления – Ректору ЕНУ им. Л.Н.Гумилева от<span class=\"fill xl\"></span></p>\n      <p>фамилия, имя, отчество <span class=\"fill xl\"></span></p>\n      <p>Специальность<span class=\"fill xl\"></span></p>\n      <p>курс, группа</p>\n      <p><span class=\"fill l\"></span>контактный телефон</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>e-mail</p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу разрешить с целью ликвидации академической разницы изучение во 2 семестре 2025-2026 учебного года следующих дисциплин:</p>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(указать наименование дисциплин, количество кредитов)</span>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(дата)\t\t\t\t\t\t\t\t\t(подпись)</span>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "acad-exit-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры,</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi,тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Менi академиялық демалыстан шығуыма байланысты 20<span class=\"fill s\"></span> жылдың «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> оқу сабақтарына жiберуiңiздi сұраймын.</p>\n      <p>Растау құжаты тіркеледі.</p>\n      <span class=\"note\">(ДКК анықтамасы,туу туралы куәлік көшірмесі, әскери билет көшірмесі)</span>\n      <span class=\"note\">(қажетті құжаттың астын сызу)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Кафедра меңгерушісі <span class=\"fill m\"></span></p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n      <p>ЖШС «Клиника доктора Абдугалимова»<span class=\"fill m\"></span></p>\n      <p>Қаржы департаменті <span class=\"fill m\"></span></p>\n      <p>Тіркеу офисі <span class=\"fill m\"></span></p>\n  </div>", "acad-exit-ru.html": "<div class=\"to\">\n      <p>Председателю правления - ректору</p>\n      <p>Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p>контактный тел. <span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас считать меня вышедшим из академического отпуска и приступившим к занятиям с «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20 <span class=\"fill s\"></span> года.</p>\n      <p>Подтверждающий документ прилагается.</p>\n      <span class=\"note\">(справки ВКК, копия св-ва о рождении ребенка, копия военного билета)</span>\n      <span class=\"note\">(нужное подчеркнуть)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(подпись заявителя)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой <span class=\"fill m\"></span></p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n      <p>ТОО «Клиника доктора Абдугалимова» <span class=\"fill m\"></span></p>\n      <p>Департамент финансов <span class=\"fill m\"></span></p>\n      <p>Офис регистратора <span class=\"fill m\"></span></p>\n  </div>", "acad-health-ext-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi,тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Маған академиялық демалысты «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span>жылдан бастап «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span>жылға дейін ұзартуыңызды сұраймын.</p>\n      <p>Академиялық демалыс «<span class=\"fill s\"></span>» <span class=\"fill m\"></span>20<span class=\"fill s\"></span>жылдан бастап «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20 жылға дейін денсаулық жағдайына байланысты берілді.</p>\n      <p>Дәрігерлік-консультациялық комиссия анықтамасы тіркеледі.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Кафедра меңгерушісі <span class=\"fill m\"></span></p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n      <p>Қаржы департаменті <span class=\"fill m\"></span></p>\n      <p>Тіркеу офисі <span class=\"fill m\"></span></p>\n  </div>", "acad-health-ext-ru.html": "<div class=\"to\">\n      <p>Председателю правления - ректору</p>\n      <p>Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p>контактный тел. <span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу продлить мне академический отпуск с «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г. по «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> года.</p>\n      <p>Академический отпуск был предоставлен с «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> год. по «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г. В связи с по состоянию здоровье.</p>\n      <p>Справка ВКК прилагается.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(подпись заявителя)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой <span class=\"fill m\"></span></p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n      <p>ТОО «Клиника доктора Абдугалимова» <span class=\"fill m\"></span></p>\n      <p>Департамент финансов <span class=\"fill m\"></span></p>\n      <p>Офис регистратора <span class=\"fill m\"></span></p>\n  </div>", "acad-health-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi,тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Денсаулығыма байланысты 20<span class=\"fill s\"></span>жылдың«<span class=\"fill s\"></span>» <span class=\"fill m\"></span>20<span class=\"fill s\"></span>жылдың«<span class=\"fill s\"></span>» <span class=\"fill l\"></span>дейін академиялық демалысқа жiберуiңiздi сұраймын.</p>\n      <p>Дәрігерлік-консультациялық комиссия анықтамасы тіркеледі.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Кафедра меңгерушісі <span class=\"fill m\"></span></p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n      <p>Қаржы департаменті <span class=\"fill m\"></span></p>\n      <p>Тіркеу офисі <span class=\"fill m\"></span></p>\n  </div>", "acad-health-ru.html": "<div class=\"to\">\n      <p>Председателю правления - ректору</p>\n      <p>Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p>контактный тел. <span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас предоставить мне академический отпуск по состоянию</p>\n      <p>Здоровья с «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> года по «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> года.</p>\n      <p>Справка ВКК прилагается.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(подпись заявителя)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой <span class=\"fill m\"></span></p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n      <p>ТОО «Клиника доктора Абдугалимова» <span class=\"fill m\"></span></p>\n      <p>Департамент финансов <span class=\"fill m\"></span></p>\n      <p>Офис регистратора <span class=\"fill m\"></span></p>\n  </div>", "appeal-ru.html": "<div class=\"to\">\n      <p>Директору Института цифровых наук<br>и искусственного интеллекта</p>\n      <p>Сеилову Ш.Ж.</p>\n  </div>\n\n  <h1>Заявление на апелляцию</h1>\n\n  <div class=\"body form\">\n    <p>Ф.И.О. студента <span class=\"fill l\"></span></p>\n    <p>Группа <span class=\"fill m\"></span> Институт <span class=\"fill m\"></span></p>\n    <p>Дата сдачи экзамена <span class=\"fill m\"></span> Вариант <span class=\"fill s\"></span></p>\n    <p>Модуль (дисциплина) <span class=\"fill l\"></span></p>\n    <p>Вопросы, поданные на апелляцию (№ вопросов) <span class=\"fill m\"></span></p>\n  </div>\n\n  <table class=\"tbl\">\n    <thead>\n      <tr>\n        <th style=\"width:18%\">№ вопроса,<br>билета</th>\n        <th style=\"width:44%\">Причины подачи заявления на апелляцию</th>\n        <th>Примечание: ссылки на источники<br>(при необходимости)</th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr><td></td><td></td><td></td></tr>\n      <tr><td></td><td></td><td></td></tr>\n      <tr><td></td><td></td><td></td></tr>\n    </tbody>\n  </table>\n\n  <div class=\"reasons\">\n    <b>Возможные причины</b>\n    <ol>\n      <li>Некорректная формулировка вопроса</li>\n      <li>Тестовое задание содержит несколько ответов вместо единственно правильного</li>\n      <li>Тестовое задание не содержит правильного ответа</li>\n      <li>Отсутствует фрагмент вопроса</li>\n      <li>Вопросы тестового задания выходят за пределы учебной программы</li>\n      <li>Другое (указать подробно)</li>\n    </ol>\n  </div>\n\n  <div class=\"sign\">\n    <div class=\"cell\">\n      <span class=\"nw\">Дата подачи заявления <span class=\"fill s\"></span>.<span class=\"fill s\"></span>.20<span class=\"fill s\"></span> г.</span>\n    </div>\n    <div class=\"cell right\">\n      <span class=\"fill m\"></span>\n      <span class=\"note\">подпись обучающегося</span>\n    </div>\n  </div>\n\n  <div class=\"office\">\n    <p>Регистрационный номер <span class=\"fill m\"></span></p>\n    <p>Дата <span class=\"fill m\"></span></p>\n    <p>Подпись сотрудника деканата <span class=\"fill m\"></span></p>\n  </div>", "bypass-sheet-ru.html": "<div class=\"center-head\">\n    <p>Евразийский национальный университет им. Л.Н. Гумилева</p>\n  </div>\n\n  <h1>Обходной лист</h1>\n\n  <div class=\"body form\">\n    <p>Ф.И.О. <span class=\"fill l\"></span></p>\n    <p>Институт <span class=\"fill m\"></span> группа <span class=\"fill m\"></span></p>\n  </div>\n\n  <ol class=\"route\">\n    <li>Директор института <span class=\"fill l\"></span></li>\n    <li>Кафедра (для выпускников) <span class=\"fill l\"></span></li>\n    <li>Комендант <span class=\"fill l\"></span>\n        <span class=\"note left\">общ. № 4, Жумабаева, 14</span></li>\n    <li>Паспортист <span class=\"fill l\"></span>\n        <span class=\"note left\">общ. № 6, Янушкевича, 4/1</span></li>\n    <li>Спецчасть <span class=\"fill l\"></span>\n        <span class=\"note left\">Гл. корпус, каб. 330 — только для лиц мужского пола</span></li>\n    <li>Библиотека <span class=\"fill l\"></span></li>\n    <li>ТОО «Клиника доктора Абдугалимова» <span class=\"fill m\"></span>\n        <span class=\"note left\">Абылай хана, 6/7</span></li>\n    <li>Бухгалтерия <span class=\"fill l\"></span>\n        <span class=\"note left\">Гл. корпус, каб. 131</span></li>\n  </ol>\n\n  <div class=\"office\">\n    <p><b>! Примечание:</b></p>\n    <p>Выпускники сдают обходной лист на кафедру.</p>\n    <p>Отчисленные в процессе обучения студенты для получения документа об образовании\n       (аттестата или диплома) сдают в кабинет 115 также студенческий билет и зачётную книжку.</p>\n  </div>", "change-data-fix-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры,</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық алдыңғыаты-жөнi, тегі)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Жеке басты куәландыратын құжаттың аудармасы дұрыс жазылмағандықтан, Сізге <span class=\"fill xl\"></span></p>\n      <span class=\"note\">(өзгертілетін дербес деректерін (тегі, аты немесе әкесінің аты) көрсету))</span>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(алдыңғы дерек)</span>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(жаңа дерек)</span>\n      <p>Жаңа деректі өзгертіп беруіңізді сұраймын.</p>\n      <p>Құжаттар көшірмесі тіркеледі.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n      <p>Тіркеу офисі <span class=\"fill m\"></span></p>\n  </div>", "change-data-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық алдыңғыаты-жөнi, тегі)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Жеке басты куәландыратын құжаттың өзгеруіне байланысты, Сізге <span class=\"fill xl\"></span></p>\n      <span class=\"note\">(өзгертілетін дербес деректерін (тегі, аты немесе әкесінің аты) көрсету))</span>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(алдыңғы дерек)</span>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(жаңа дерек)</span>\n      <p>ауыстыруға рұқсат беруіңізді сұраймын.</p>\n      <p>Құжаттар көшірмесі тіркеледі.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n      <p>Тіркеу офисі <span class=\"fill m\"></span></p>\n  </div>", "diploma-redefense-ru.html": "<div class=\"to\">\n      <p>Председателю правления - ректору</p>\n      <p>Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill s\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p>«Институт цифровых наук и искусственного интеллекта»</p>\n      <span class=\"note\">(факультет)</span>\n      <p>контактный тел. <span class=\"fill s\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>В связи с тем что, я не смог(ла) явиться в 20<span class=\"fill s\"></span> году на защиту для сдачи дипломного проекта (работы) по специальности <span class=\"fill s\"></span>, прошу Вас допустить в 20<span class=\"fill s\"></span> году к повторной защите дипломного проекта (работы).</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">/подпись заявителя/</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой<span class=\"fill m\"></span></p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n      <p>Департамент финансов <span class=\"fill m\"></span></p>\n      <p>Офис регистратора<span class=\"fill m\"></span></p>\n  </div>", "expel-own-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық алдыңғыаты-жөнi, тегі)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Мені, 20<span class=\"fill s\"></span> жылдың <span class=\"fill s\"></span> <span class=\"fill s\"></span> күнінен бастап өз еркімен оқудан</p>\n      <p>шығаруыңызды сұраймын</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Кафедра меңгерушісі<span class=\"fill m\"></span></p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n  </div>", "expel-own-ru.html": "<div class=\"to\">\n      <p>Председателю Правления - ректору</p>\n      <p>НАО Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p>контактный тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас отчислить меня из числа обучающихся по собственному</p>\n      <p>желанию с «<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span>года.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(подпись заявителя)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой<span class=\"fill m\"></span></p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n  </div>", "free-form-kk.html": "<div class=\"to\">\n      <p>Л.Н.Гумилев атындағы ЕҰУ</p>\n      <p>Цифрлық ғылымдар және жасанды интеллект институтының директоры</p>\n      <p>Ш.Ж.Сеилов мырзаға</p>\n      <p><span class=\"fill m\"></span>тобының студенті</p>\n      <span class=\"note\">(шифр)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(аты-жөні)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(тел:)</span>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p>Директору Института цифровых</p>\n      <p>наук и искусственного интеллекта Евразийского национального университета имени Л.Н. Гумилёва Сеилову Ш. Ж.</p>\n      <p>от студента</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О)</span>\n      <p>группы<span class=\"fill m\"></span></p>\n      <span class=\"note\">(шифр)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(тел.номер)</span>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "free-form-ru.html": "<div class=\"to\">\n      <p>Председателю правления - ректору</p>\n      <p>Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(факультет)</span>\n      <p>контактный тел. <span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p><span class=\"fill xl\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">/подпись заявителя/</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> <span class=\"fill s\"></span>г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n  </div>", "fx-retake-kk.html": "<div class=\"to\">\n      <p>Цифрлық ғылымдар және жасанды интеллект институт директоры</p>\n      <p>Ш.Ж.Сеиловқа <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Аты жөні толық)</span>\n      <p><span class=\"fill xl\"></span></p>\n      <p>Топ <span class=\"fill xl\"></span></p>\n      <p>Факультет <span class=\"fill l\"></span></p>\n      <p>Мамандық <span class=\"fill l\"></span></p>\n      <p>тел: <span class=\"fill l\"></span></p>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p>Маған осы аталған пәннен <span class=\"fill l\"></span>,</p>\n      <p>ҒХ <span class=\"fill s\"></span>балл алғандықтан, қайта тапсыруға рұқсат беруіңізді сұраймын.</p>\n      <p>Білім алушының қолы:<span class=\"fill m\"></span></p>\n      <p>Күні:<span class=\"fill m\"></span></p>\n      <p>Топ старостасының аты-жөні:</p>\n      <p>Ескерту: Емтиханға жіберілу рейтингісі болып және қорытынды бақылаудан (емтиханнан) 25 пен 49 аралығында балл алған және әріптік қорытынды бағасы FX сәйкес болған жағдайда, білім алушы сессия немесе демалыс уақытында ақысыз негізде пәнді қайта оқымай емтихан тапсыра алады.</p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "fx-retake-ru.html": "<div class=\"to\">\n      <p>Директор Институт цифровых наук и искусственного интеллекта</p>\n      <p>Ш.Ж.Сеилову</p>\n      <p>От<span class=\"fill l\"></span></p>\n      <span class=\"note\">(ФИО полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(Группы)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(Факультета)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(Специальность)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>Контактный тел:<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас разрешить повторное прохождение ҒХ,</p>\n      <p>По дисциплине <span class=\"fill m\"></span>, по причине низкого балла.</p>\n      <p>Подпись заявителя <span class=\"fill m\"></span></p>\n      <p>Дата <span class=\"fill m\"></span></p>\n      <p>Сот/тел и ФИО старосты группы: <span class=\"fill m\"></span></p>\n      <p>Примечание: при наличии рейтинга допуска к экзамену (РД) и получении на итоговом контроле (экзамене) от 25 до 49 баллов и буквенной итоговой оценке FX, обучающийся имеет возможность на бесплатной основе пересдать экзамен в период сессии либо в период каникул, без повторного прохождения дисциплины.</p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "ipk-debt-ru.html": "<div class=\"to\">\n      <p>Приложение 3</p>\n      <p>Директору института</p>\n      <p>от <span class=\"fill m\"></span></p>\n      <p><span class=\"fill m\"></span></p>\n      <p><span class=\"fill m\"></span></p>\n      <p>фамилия, имя, отчество</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>специальность</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>курс, группа</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>контактный телефон</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>e- mail</p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу разрешить в рамках неформального образования с целью ликвидации академической задолженности изучение курса дисциплин <span class=\"fill xl\"></span></p>\n      <span class=\"note\">(указать наименование дисциплин, количество кредитов)</span>\n      <p>в сроки<span class=\"fill l\"></span></p>\n      <span class=\"note\">(указать сроки)</span>\n      <p>Язык обучения <span class=\"fill m\"></span></p>\n      <p>К заявлению прилагаю следующие документы:</p>\n      <p>1) копия документа, удостоверяющего личность;</p>\n      <p>2) копия документа об образовании (академическая справка, транскрипт).</p>\n      <span class=\"note\">(дата подачи заявления) \t\t\t\t(подпись заявителя)</span>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "ipk-extra-ru.html": "<div class=\"to\">\n      <p>Приложение 1</p>\n      <p>Директору института</p>\n      <p>от <span class=\"fill m\"></span></p>\n      <p><span class=\"fill m\"></span></p>\n      <p><span class=\"fill m\"></span></p>\n      <p>фамилия, имя, отчество</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>специальность</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>курс, группа</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>контактный телефон</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>e- mail</p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу разрешить в рамках неформального образования изучение курса дисциплин<span class=\"fill xl\"></span></p>\n      <span class=\"note\">(указать наименование дисциплин, количество кредитов)</span>\n      <p>по дополнительной образовательной программе сверх учебного плана в сроки <span class=\"fill m\"></span></p>\n      <span class=\"note\">(указать сроки)</span>\n      <p>Язык обучения <span class=\"fill m\"></span></p>\n      <p>К заявлению прилагаю следующие документы:</p>\n      <p>1) копия документа, удостоверяющего личность.</p>\n      <span class=\"note\">(дата подачи заявления) \t\t\t\t(подпись заявителя)</span>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "ipk-gpa-ru.html": "<div class=\"to\">\n      <p>Приложение 4</p>\n      <p>Директору института</p>\n      <p>от <span class=\"fill m\"></span></p>\n      <p><span class=\"fill m\"></span></p>\n      <p><span class=\"fill m\"></span></p>\n      <p>фамилия, имя, отчество</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>специальность</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>курс, группа</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>контактный телефон</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>e- mail</p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу разрешить в рамках неформального образования с целью повышения переводных баллов (GРА) изучение курса дисциплин <span class=\"fill xl\"></span> <span class=\"fill l\"></span>(указать наименование дисциплин, количество кредитов)</p>\n      <p>в сроки<span class=\"fill l\"></span></p>\n      <span class=\"note\">(указать сроки)</span>\n      <p>Язык обучения <span class=\"fill m\"></span></p>\n      <p>К заявлению прилагаю следующие документы:</p>\n      <p>1) копия документа, удостоверяющего личность;</p>\n      <p>2) копия документа об образовании (транскрипт).</p>\n      <span class=\"note\">(дата подачи заявления) \t\t\t\t(подпись заявителя)</span>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "ipk-prereq-ru.html": "<div class=\"to\">\n      <p>Приложение 2</p>\n      <p>Директору института</p>\n      <p>от <span class=\"fill m\"></span></p>\n      <p><span class=\"fill m\"></span></p>\n      <p><span class=\"fill m\"></span></p>\n      <p>фамилия, имя, отчество</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>специальность</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>курс, группа</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>контактный телефон</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>e- mail</p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу разрешить в рамках неформального образования с целью освоения пререквизитов изучение курса дисциплин <span class=\"fill xl\"></span></p>\n      <span class=\"note\">(указать наименование дисциплин, количество кредитов)</span>\n      <p>в сроки<span class=\"fill l\"></span></p>\n      <span class=\"note\">(указать сроки)</span>\n      <p>Специальность (код/ наименование образовательной программы, год окончания) <span class=\"fill xl\"></span></p>\n      <p>Язык обучения <span class=\"fill m\"></span></p>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20 <span class=\"fill s\"></span> г. <span class=\"fill l\"></span></p>\n      <span class=\"note\">(дата подачи заявления)\t\t\t\t (подпись заявителя)</span>\n      <p>К заявлению прилагаю следующие документы:</p>\n      <p>1) копия документа, удостоверяющего личность;</p>\n      <span class=\"note\">(дата подачи заявления)  \t\t\t\t (подпись заявителя)</span>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "pay-actual-repeat-kk.html": "<div class=\"to\">\n      <p>Директор института <span class=\"fill m\"></span></p>\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры,</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт, курс, тобы,)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi, тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(тел. e-mail)</span>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p>Сізден курстан курсқа қалуыма байланысты, 2025-2026 оқу жылы үшін төлемді жеке оқу жоспарына (ИУП) сәйкес <span class=\"fill s\"></span> семестрлерде нақты академиялық пәндерді оқуға рұқсат беруіңізді сұраймын.</p>\n      <p>7 семестр</p>\n      <p>8 семестр</p>\n      <p><span class=\"fill m\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>»<span class=\"fill m\"></span> 20<span class=\"fill s\"></span>ж.</p>\n      <p>1. Кафедра меңгерушісі<span class=\"fill m\"></span></p>\n      <p>2. Институт директоры <span class=\"fill m\"></span></p>\n  </div>\n\n  <div class=\"lines\">\n    <div></div><div></div><div></div><div></div><div></div>\n    <div></div><div></div><div></div><div></div><div></div>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "pay-actual-repeat-ru.html": "<div class=\"to\">\n      <p>Председателю Правления – Ректору ЕНУ им. Л.Н.Гумилева профессору Е.Б. Сыдыкову от<span class=\"fill xl\"></span>фамилия, имя, отчество <span class=\"fill l\"></span>Специальность</p>\n      <p><span class=\"fill l\"></span>курс, группа</p>\n      <p><span class=\"fill l\"></span>контактный телефон</p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас разрешить мне произвести оплату за 2025-2026 уч. из расчета фактический изучаемых за<span class=\"fill s\"></span> семестр академических дисциплин саглосно ИУПа, в связи с тем, что я остался на повторный курс</p>\n      <p>5 семестр</p>\n      <p>6 семестр</p>\n      <p><span class=\"fill m\"></span></p>\n      <span class=\"note\">(подпись заявителя)</span>\n      <p>«<span class=\"fill s\"></span>»<span class=\"fill m\"></span> 20<span class=\"fill s\"></span>г.</p>\n      <p>Заведующий кафедрой<span class=\"fill m\"></span></p>\n  </div>\n\n  <div class=\"lines\">\n    <div></div><div></div><div></div><div></div><div></div>\n    <div></div><div></div><div></div><div></div><div></div>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "pay-actual-univ-kk.html": "<div class=\"to\">\n      <p>Директор института<span class=\"fill m\"></span></p>\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры,</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт, курс, тобы,)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi, тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(тел. e-mail)</span>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p>Сізден, мені ЖОО ауысып келуіме байланысты, 2025-2026 оқу жылы үшін төлемді жеке оқу жоспарына (ИУП) сәйкес <span class=\"fill s\"></span> семестрлерде фактілі академиялық пәндерді оқуға рұқсат беруіңізді сұраймын.</p>\n      <p>3 семестр</p>\n      <p>4 семестр</p>\n      <p><span class=\"fill m\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>»<span class=\"fill m\"></span> 20<span class=\"fill s\"></span>ж.</p>\n      <p>1. Кафедра меңгерушісі<span class=\"fill m\"></span></p>\n      <p>2. Институт директоры <span class=\"fill m\"></span></p>\n  </div>\n\n  <div class=\"lines\">\n    <div></div><div></div><div></div><div></div><div></div>\n    <div></div><div></div><div></div><div></div><div></div>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "pay-actual-univ-ru.html": "<div class=\"to\">\n      <p>Председателю Правления – Ректору ЕНУ им. Л.Н.Гумилева профессору Е.Б. Сыдыкову от<span class=\"fill xl\"></span></p>\n      <p>фамилия, имя, отчество</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>Специальность</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>курс, группа</p>\n      <p><span class=\"fill l\"></span></p>\n      <p>контактный телефон</p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас разрешить мне произвести оплату за 2025-2026 уч. из расчета фактически изучаемых за<span class=\"fill s\"></span> семестра академических дисциплин саглосно ИУПа, в связи с тем, что я перевелся с другого вуза.</p>\n      <p>3 семестр</p>\n      <p>4 семестр</p>\n      <p><span class=\"fill m\"></span></p>\n      <span class=\"note\">(подпись заявителя)</span>\n      <p>«<span class=\"fill s\"></span>»<span class=\"fill m\"></span> 20<span class=\"fill s\"></span>г.</p>\n      <p>Заведующий кафедрой<span class=\"fill m\"></span></p>\n  </div>\n\n  <div class=\"lines\">\n    <div></div><div></div><div></div><div></div><div></div>\n    <div></div><div></div><div></div><div></div><div></div>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "receipt-debt-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы\nЕуразия ұлттық университеті» КеАҚ\nЦифрлық ғылымдар және жасанды интеллект институтының\nи.о. директоры Ш.Ж. Сеиловқа</p>\n      <p><span class=\"fill s\"></span> курс білім алушысынан\nМамандық<span class=\"fill m\"></span> Тобы: <span class=\"fill l\"></span>\nАты-жөні: <span class=\"fill m\"></span></p>\n      <p>тел.<span class=\"fill l\"></span></p>\n      <p>Мен, <span class=\"fill l\"></span> (аты-жөні толық), <span class=\"fill s\"></span> курс, <span class=\"fill m\"></span> тобының білім алушысы, кафедра тарапынан менде төмендегі пәндер бойынша академиялық қарыздың бар екендігі туралы ресми түрде хабардар етілгенімді растаймын:</p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p>Кафедрада менімен жеке түсіндіру жұмысы жүргізілді. Академиялық процесті ұйымдастыру ережелеріне сәйкес академиялық қарызды жою тәртібі мен мерзімдері түсіндірілді.</p>\n      <p>Маған академиялық қарызды белгіленген мерзімде өтемеген жағдайда келесі курсқа ауыстырылмайтыным және белгіленген тәртіпке сәйкес қайта оқу жылына (перекурс) қалдырылуым мүмкін екені түсіндірілді.</p>\n      <p>Осы жазба арқылы жоғарыда көрсетілген ақпараттың мазмұны маған толық түсінікті екенін және оның құқықтық салдары түсіндірілгенін растаймын.</p>\n      <p>Күні: <span class=\"fill m\"></span>\nҚолы: <span class=\"fill m\"></span></p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "receipt-debt-ru.html": "<div class=\"to\">\n      <p>НАО «Евразийский национальный университет имени Л.Н. Гумилева»\nИ.о. директора Института цифровых наук и искусственного интеллекта\nШ.Ж. Сеилову</p>\n      <p>от обучающегося <span class=\"fill s\"></span> курса\nспециальности <span class=\"fill m\"></span>\nгруппа <span class=\"fill m\"></span>\nФ.И.О. <span class=\"fill m\"></span></p>\n      <p>тел.<span class=\"fill l\"></span></p>\n      <p>Я, <span class=\"fill l\"></span>(Ф.И.О.), обучающийся(аяся) <span class=\"fill s\"></span> курса, группа <span class=\"fill m\"></span>, подтверждаю, что проинформирован(а) кафедрой о наличии у меня академической задолженности по следующим дисциплинам:</p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p>Со мной проведена индивидуальная беседа, в ходе которой мне разъяснены сроки и порядок ликвидации академической задолженности в соответствии с Правилами организации учебного процесса Университета.</p>\n      <p>Мне разъяснено, что в случае неустранения академической задолженности в установленные сроки я не буду допущен(а) к переводу на следующий курс и могу быть оставлен(а) на повторный год обучения (перекурс) в установленном порядке.</p>\n      <p>Настоящим подтверждаю, что информация мне понятна, правовые последствия разъяснены.</p>\n      <p>Дата <span class=\"fill m\"></span> Подпись <span class=\"fill m\"></span></p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "refund-double-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетінің</p>\n      <p>Басқарма Төрағасы-Ректор</p>\n      <p>Е.Б.Сыдықов мырзаға</p>\n      <p>Цифрлық ғылымдар және жасанды интеллект институтының</p>\n      <p><span class=\"fill l\"></span> мамандығының _ курс студенті<span class=\"fill xl\"></span></p>\n      <p>Тел.: <span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p>Мен, <span class=\"fill xl\"></span>, байланысты<span class=\"fill m\"></span>төленген<span class=\"fill l\"></span>теңге көлемдегі ақшаны қайтаруыңызды сұраймын.</p>\n      <p><span class=\"fill m\"></span></p>\n      <p><span class=\"fill m\"></span></p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "refund-grant-kk.html": "<div class=\"to\">\n      <p>Л.Н.Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы -Ректор</p>\n      <p>Е.Б.Сыдықов мырзаға</p>\n      <p>Цифрлық ғылымдар және</p>\n      <p>жасанды интеллект институты,</p>\n      <p>IOT-жүйелер инженериясы</p>\n      <p><span class=\"fill s\"></span> курс магистранты</p>\n      <p><span class=\"fill s\"></span></p>\n      <p><span class=\"fill s\"></span></p>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p>Босаған бос білім грантының иегері атануымына байланысты, 2025-2026 оқу жылының төленген жарты жылдық төлем ақысын қайтаруыңызды сұраймын.</p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill s\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "refund-grant-ru.html": "<div class=\"to\">\n      <p>Председателю Правления – Ректору</p>\n      <p>НАО «Евразийский национальный университет</p>\n      <p>им. Л.Н. Гумилева» Е.Б. Сыдыкову</p>\n      <p>от студента <span class=\"fill s\"></span> курса</p>\n      <p>специальности <span class=\"fill s\"></span></p>\n      <p>Института цифровых наук и</p>\n      <p>искуственного интеллекта</p>\n      <p><span class=\"fill s\"></span></p>\n      <p><span class=\"fill s\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>В связи с переводом на вакантный грант прошу осуществить возврат денежных средств за первое полугодие 2025-2026 учебного года.</p>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill s\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "repeat-debt-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi, тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Сізден академиялық қарыз пәндерімнің болуына байланысты<span class=\"fill m\"></span>курсты қайта оқуға рұқсат беруіңізді сұраймын.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Институт дирректоры <span class=\"fill m\"></span></p>\n      <p>Кафедра меңгерушісі <span class=\"fill m\"></span></p>\n  </div>", "repeat-debt-ru.html": "<div class=\"to\">\n      <p>Председателю правления - ректору</p>\n      <p>Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p>контактный тел. <span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>В связи с наличием у меня академической задолженности по дисциплинам прошу Вас разрешить мне повторное обучение на <span class=\"fill s\"></span> курсе.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">/подпись заявителя/</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой <span class=\"fill m\"></span></p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n  </div>", "repeat-gpa-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi, тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Курстан курсқа көшіру кезінде ауысу балының (GPA) төмен болуына байланысты<span class=\"fill m\"></span>курсты қайта оқуға рұқсат беруіңізді сұраймын.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Институт дирректоры<span class=\"fill m\"></span></p>\n      <p>Кафедра меңгерушісі <span class=\"fill m\"></span></p>\n  </div>", "repeat-gpa-ru.html": "<div class=\"to\">\n      <p>Председателю правления - ректору</p>\n      <p>Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p>контактный тел. <span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас разрешить повторное прохождение <span class=\"fill s\"></span> курса, по причине низкого переводного балла (GPA) при переводе с курса на курс.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">/подпись заявителя/</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой <span class=\"fill m\"></span></p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n  </div>", "restore-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры,</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(факультет)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық алдыңғыаты-жөнi, тегі)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Сізден<span class=\"fill s\"></span> жылдың <span class=\"fill s\"></span> бастап оқуға қайта қабылдауға рұқсат беруіңізді сұраймын.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Директор института<span class=\"fill l\"></span>Ш.Ж. Сеилов</p>\n      <p>Кафедра меңгерушісі<span class=\"fill l\"></span>А.А. Конырханова</p>\n  </div>", "summer-cancel-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры,</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт, курс, тобы,)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi, тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(тел. e-mail)</span>\n  </div>\n\n  <h1>Өтініш</h1>\n\n  <div class=\"body doc\">\n      <p>Сізден 2025-2026 оқу жылының жазғы семестрінен өтініш бойынша келесі академиялық қарызы бар пәндерді, оқи алмалуымның себебі:<span class=\"fill xl\"></span>байланысты төмендегі пәндерді тізімнен алып тастауыңызды сұраймын <span class=\"fill xl\"></span></p>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(күні) \t\t\t\t\t\t\t\t\t\t(қолы)</span>\n      <p>Кафедра меңгерушісі<span class=\"fill m\"></span></p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "summer-cancel-ru.html": "<div class=\"to\">\n      <p>Председателю Правления – Ректору ЕНУ им. Л.Н.Гумилева профессору Е.Б. Сыдыкову от<span class=\"fill xl\"></span>фамилия, имя, отчество <span class=\"fill l\"></span>Специальность</p>\n      <p><span class=\"fill l\"></span>курс, группа</p>\n      <p><span class=\"fill l\"></span>контактный телефон</p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас исключить из списка предметов с академической задолженностью за летний семестр 2025-2026 учебного года следующие дисциплины:<span class=\"fill xl\"></span>Причина неспособности продолжить обучение в этих дисциплинах связана с финансовыми трудностями.</p>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(дата)\t\t\t\t\t\t\t\t\t(подпись)</span>\n      <p>Заведующий кафедрой<span class=\"fill m\"></span></p>\n      <p>Директор института<span class=\"fill m\"></span></p>\n  </div>\n\n  <div class=\"office\">\n      \n  </div>", "transfer-lang-ru.html": "<div class=\"to\">\n      <p>Председателю правления - ректору</p>\n      <p>Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(Институт)</span>\n      <p>контактный тел. <span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас разрешить мне перевод с <span class=\"fill m\"></span> отделения</p>\n      <span class=\"note\">(указать язык обучения)</span>\n      <p>на <span class=\"fill l\"></span> отделение поспециальности<span class=\"fill m\"></span></p>\n      <span class=\"note\">(указать язык обучения)</span>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(указать код и наименование специальности)</span>\n      <p>С «Правилами перевода и восстановления, обучающихся по типам организации образования» утвержденных приказом Министра образования и науки Республики Казахстан от 20 января 2015 года № 19 ознакомлен(а).</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">/подпись заявителя/</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой<span class=\"fill m\"></span></p>\n      <p>Директор института <span class=\"fill m\"></span></p>\n      <p>Офис регистратора<span class=\"fill m\"></span></p>\n  </div>", "transfer-op-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетi КеАҚ</p>\n      <p>Басқарма төрағасы-ректор</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi, тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел. <span class=\"fill m\"></span></p>\n      <p>Эл.пошта <span class=\"fill l\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Сізден <span class=\"fill xl\"></span></p>\n      <span class=\"note\">(БББТ атауы мен кодын көрсету)</span>\n      <p>білім беру бағдарламасы тобының <span class=\"fill l\"></span></p>\n      <span class=\"note\">(БББ атауы мен кодын көрсету)</span>\n      <p><span class=\"fill l\"></span> білім беру бағдарламасының</p>\n      <p>тобынан<span class=\"fill xl\"></span> (БББТ атауы мен кодын көрсету)</p>\n      <p><span class=\"fill l\"></span> білім беру бағдарламасына</p>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(БББ атауы мен кодын көрсету)</span>\n      <p>ауысуыма рұқсат беруіңізді сұраймын.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Кафедра меңгерушісі <span class=\"fill l\"></span></p>\n      <p>Институт директоры <span class=\"fill l\"></span></p>\n      <p>Тіркеу офисі <span class=\"fill m\"></span></p>\n  </div>", "transfer-op-ru.html": "<div class=\"to\">\n      <p>Председателю Правления - Ректору НАО Евразийского национального</p>\n      <p>университета им. Л.Н. Гумилева</p>\n      <p>Е.Б. Сыдыкову</p>\n      <p>от <span class=\"fill l\"></span></p>\n      <span class=\"note\">(Ф.И.О. полностью)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>группы<span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p>контактный тел. <span class=\"fill m\"></span></p>\n      <p>Эл.почта <span class=\"fill l\"></span></p>\n  </div>\n\n  <h1>Заявление</h1>\n\n  <div class=\"body doc\">\n      <p>Прошу Вас разрешить мне перевод с ГОП <span class=\"fill xl\"></span></p>\n      <span class=\"note\">(указать код и наименование ГОП)</span>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(указать код и наименование ОП)</span>\n      <p>на ГОП <span class=\"fill xl\"></span></p>\n      <span class=\"note\">(указать код и наименование ГОП)</span>\n      <p><span class=\"fill xl\"></span></p>\n      <span class=\"note\">(указать код и наименование ОП)</span>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">/подпись заявителя/</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> г.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Согласовано:</p>\n      <p>Заведующий кафедрой <span class=\"fill l\"></span></p>\n      <p>Директор Института <span class=\"fill l\"></span></p>\n      <p>Офис регистратора <span class=\"fill m\"></span></p>\n  </div>", "transfer-univ-kk.html": "<div class=\"to\">\n      <p>Л.Н. Гумилев атындағы</p>\n      <p>Еуразия ұлттық университетiнiң</p>\n      <p>Басқарма төрағасы-ректоры</p>\n      <p>Е.Б. Сыдықовқа</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(институт)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(толық аты-жөнi, тегi)</span>\n      <p><span class=\"fill l\"></span></p>\n      <p>байланыс тел.<span class=\"fill m\"></span></p>\n  </div>\n\n  <h1>Өтiнiш</h1>\n\n  <div class=\"body doc\">\n      <p>Маған<span class=\"fill xl\"></span></p>\n      <span class=\"note\">(ЖОО атауын көрсету)</span>\n      <p>ауысуға рұқсат беруіңізді сұраймын.</p>\n      <p><span class=\"fill l\"></span></p>\n      <span class=\"note\">(өтініш берушінің қолы)</span>\n      <p>«<span class=\"fill s\"></span>» <span class=\"fill m\"></span> 20<span class=\"fill s\"></span> ж.</p>\n  </div>\n\n  <div class=\"office\">\n      <p>Келісілді:</p>\n      <p>Кафедра меңгерушісі <span class=\"fill m\"></span></p>\n      <p>Институт директоры <span class=\"fill m\"></span></p>\n      <p>Қаржы департаменті <span class=\"fill m\"></span></p>\n      <p>Тіркеу офисі <span class=\"fill m\"></span></p>\n  </div>"};
+
+/* ==================== ПЕРЕВОДЫ ИНТЕРФЕЙСА ==================== */
+const T = {
+ ru:{ title:"ЦИФРОВОЕ САМООБСЛУЖИВАНИЕ",
+      subtitle:"Институт цифровых наук и искусственного интеллекта",
+      mForm:"ЗАПОЛНИТЬ<br>ЗАЯВЛЕНИЕ", mEnu:"САЙТ ЕНУ", mExit:"ЗАВЕРШИТЬ<br>СЕАНС",
+      hint:"Выберите нужный раздел", cTitle:"Заявления и справки",
+      bMenu:"← Меню", bList:"← К списку", bBack:"← Назад", bPrint:"Печать бланка",
+      cap:"Так выглядит бланк", pHint:"Заполните поля и нажмите «Печать бланка»",
+      open:"Открыть →", need:"Что взять с собой", tips:"Как заполнять",
+      where:"Куда сдавать", appr:"Кто согласовывает", print:"Заполнить и распечатать",
+      bye:"Сеанс завершён", byeText:"Спасибо! Не забудьте забрать документы из принтера.",
+      mdTitle:"Ваши данные — подставятся в бланк",
+      fFio:"Ф.И.О. полностью", fGroup:"Курс и группа", fSpec:"Специальность",
+      fInst:"Институт", fIin:"ИИН", fTel:"Телефон", fMail:"E-mail",
+      bClear:"Очистить бланк",
+      mdNote:"Остальные поля заполните прямо в бланке — коснитесь жёлтой строки и введите текст. Можно распечатать и пустым.",
+      idle:n=>`Возврат в меню через ${n} с. Коснитесь экрана.` },
+ kk:{ title:"ЦИФРЛЫҚ ӨЗІНЕ-ӨЗІ ҚЫЗМЕТ КӨРСЕТУ",
+      subtitle:"Цифрлық ғылымдар және жасанды интеллект институты",
+      mForm:"ӨТІНІШ<br>ТОЛТЫРУ", mEnu:"ЕҰУ САЙТЫ", mExit:"СЕАНСТЫ<br>АЯҚТАУ",
+      hint:"Қажетті бөлімді таңдаңыз", cTitle:"Өтініштер мен анықтамалар",
+      bMenu:"← Мәзір", bList:"← Тізімге", bBack:"← Артқа", bPrint:"Бланкіні басып шығару",
+      cap:"Бланк осылай көрінеді", pHint:"Өрістерді толтырып, «Басып шығару» түймесін басыңыз",
+      open:"Ашу →", need:"Не алып келу керек", tips:"Қалай толтыру керек",
+      where:"Қайда тапсыру", appr:"Кім келіседі", print:"Толтырып, басып шығару",
+      bye:"Сеанс аяқталды", byeText:"Рақмет! Құжаттарыңызды принтерден алуды ұмытпаңыз.",
+      mdTitle:"Сіздің деректеріңіз — бланкіге автоматты түрде қойылады",
+      fFio:"Аты-жөні толық", fGroup:"Курс және тобы", fSpec:"Мамандық",
+      fInst:"Институт", fIin:"ЖСН", fTel:"Телефон", fMail:"E-mail",
+      bClear:"Бланкіні тазалау",
+      mdNote:"Қалған өрістерді бланкінің өзінде толтырыңыз — сары жолға тиіп, мәтін енгізіңіз. Бос күйінде де басып шығаруға болады.",
+      idle:n=>`Мәзірге ${n} с ішінде оралу. Экранға тиіңіз.` }
+};
+
+let lang = "ru", current = null;
+
+/* ==================== НАВИГАЦИЯ ==================== */
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on", s.id===id));
+  resetIdle();
+}
+function showMenu(){ current=null; show("menu"); }
+function showCatalog(){ renderCatalog(); show("catalog"); }
+function showCard(){ if(current) openItem(current.id); }
+function goSite(k){ location.href = CONFIG[k]; }
+
+/* ==================== КАТАЛОГ ==================== */
+function renderCatalog(){
+  const root = document.getElementById("catList");
+  root.innerHTML = "";
+  Object.keys(CATEGORIES).forEach(key=>{
+    const items = TEMPLATES.filter(t=>t.cat===key);
+    if(!items.length) return;
+    const h = document.createElement("div");
+    h.className="cat-title"; h.textContent = CATEGORIES[key][lang];
+    root.appendChild(h);
+    const g = document.createElement("div"); g.className="grid";
+    items.forEach(t=>{
+      const b=document.createElement("button"); b.className="item";
+      b.innerHTML = `<b>${t[lang]}</b><small>${t.about[lang]}</small>
+                     <span class="go">${T[lang].open}</span>`;
+      b.onclick = ()=>openItem(t.id);
+      g.appendChild(b);
+    });
+    root.appendChild(g);
+  });
+}
+
+/* ==================== КАРТОЧКА ЗАЯВЛЕНИЯ ==================== */
+function openItem(id){
+  const t = TEMPLATES.find(x=>x.id===id);
+  if(!t) return;
+  current = t;
+  const U = T[lang];
+
+  document.getElementById("cardTitle").textContent = t[lang];
+  document.getElementById("cardInfo").innerHTML = `
+    <h3>${t[lang]}</h3>
+    <div class="about">${t.about[lang]}</div>
+    <div class="facts"><div class="fact"><span>${U.where}</span><b>${t.where[lang]}</b></div></div>
+    <div class="block"><h4>${U.need}</h4>
+      <ul>${t.need[lang].map(x=>`<li>${x}</li>`).join("")}</ul></div>
+    <div class="block"><h4>${U.tips}</h4>
+      <ul>${t.tips[lang].map(x=>`<li>${x}</li>`).join("")}</ul></div>
+    <div class="block"><h4>${U.appr}</h4>
+      <div class="chips">${t.appr[lang].map(x=>`<span>${x}</span>`).join("")}</div></div>
+    <div class="actions">
+      <button class="btn primary" onclick="openBlank()">${U.print}</button>
+      <button class="btn ghost" onclick="showCatalog()">${U.bList}</button>
+    </div>`;
+
+  document.getElementById("previewHost").innerHTML = sheetHtml(t);
+  show("card");
+  fitPreview();
+}
+
+function sheetHtml(t){
+  const key = t.files[lang] || t.files.ru;
+  return '<div class="blank"><div class="sheet">' + (BLANKS[key] || "") + '</div></div>';
+}
+
+function fitPreview(){
+  const box = document.getElementById("prevFrame");
+  const host = document.getElementById("previewHost");
+  if(!box.offsetWidth) return;
+  const s = Math.min(box.offsetWidth/810, box.offsetHeight/1130, 1);
+  host.style.transform = `translateX(-50%) scale(${s})`;
+}
+window.addEventListener("resize", ()=>{ fitPreview(); });
+
+/* ==================== БЛАНК И ПЕЧАТЬ ==================== */
+function openBlank(){
+  if(!current) return;
+  const host = document.getElementById("blankHost");
+  host.innerHTML = sheetHtml(current);
+  makeEditable(host);
+  applyPersonal();
+  show("blank");
+  document.querySelector("#blank .pane").scrollTop = 0;
+  setTimeout(fitToPage, 100);
+}
+
+/* ---------- какие поля шапки к какому полю ввода относятся ---------- */
+const FIELD_MAP = [
+  ["iin",   /\b(иин|жсн)\b/i],
+  ["mail",  /(эл\.?\s*почт|e-?\s*mail|пошта)/i],
+  ["tel",   /(тел|телефон|байланыс)/i],
+  ["fio",   /(ф\.?\s*и\.?\s*о|фамилия|аты-?\s*жөн|толық аты)/i],
+  ["spec",  /(специальн|мамандық)/i],
+  ["group", /(групп|тобы|курс|шифр)/i],
+  ["inst",  /(институт|факультет)/i]
+];
+
+/* Текст-подсказка рядом с линией: что стоит перед ней и подпись под ней */
+function fillContext(el){
+  const p = el.closest("p") || el.parentElement;
+  let before = "";
+  if(p){
+    for(const n of p.childNodes){
+      if(n === el || (n.contains && n.contains(el))) break;
+      before += n.textContent || "";
+    }
+  }
+  let after = "";
+  const sib = el.nextElementSibling;
+  if(sib && sib.classList.contains("note")) after = sib.textContent;
+  const pn = p && p.nextElementSibling;
+  if(!after && pn && pn.classList && pn.classList.contains("note")) after = pn.textContent;
+  // подпись может идти следующей строкой обычным текстом («фамилия, имя, отчество»)
+  if(!after && pn && !pn.querySelector(".fill")){
+    const t = (pn.textContent || "").trim();
+    if(t && t.length < 60) after = t;
+  }
+  return before + " " + after;
+}
+
+/* Делаем все линии, пустые строки и ячейки таблиц заполняемыми */
+function makeEditable(host){
+  const taken = new Set();
+
+  const heads = host.querySelectorAll(".to .fill, .form .fill");
+  heads.forEach(el=>{
+    const c = fillContext(el);
+    for(const [key, rx] of FIELD_MAP){
+      if(!taken.has(key) && rx.test(c)){ el.dataset.auto = key; taken.add(key); break; }
+    }
+  });
+  // если Ф.И.О. так и не нашлось — берём первую свободную линию в шапке
+  if(!taken.has("fio")){
+    for(const el of heads){
+      if(!el.dataset.auto){ el.dataset.auto = "fio"; taken.add("fio"); break; }
+    }
+  }
+
+  // подписи и графы согласования заполняются от руки — их не редактируем
+  const SIGN = /(подпись|қолы|қол қой|келісілді|согласовано)/i;
+
+  host.querySelectorAll(".fill, .lines div, table.tbl td").forEach(el=>{
+    if(el.closest(".office")) return;
+    if(el.classList.contains("fill") && SIGN.test(fillContext(el))) return;
+    el.setAttribute("contenteditable", "true");
+    el.setAttribute("spellcheck", "false");
+    el.addEventListener("keydown", e=>{
+      if(e.key === "Enter"){ e.preventDefault(); }
+      e.stopPropagation();
+    });
+    el.addEventListener("paste", e=>{
+      e.preventDefault();
+      const t = (e.clipboardData || window.clipboardData).getData("text");
+      document.execCommand("insertText", false, t.replace(/\s+/g," "));
+    });
+    el.addEventListener("input", ()=>{ resetIdle(); });
+  });
+}
+
+/* Переносим данные из панели в шапку бланка */
+function applyPersonal(){
+  const host = document.getElementById("blankHost");
+  host.querySelectorAll("[data-auto]").forEach(el=>{
+    const inp = document.getElementById("f-" + el.dataset.auto);
+    if(!inp) return;
+    if(document.activeElement !== el) el.textContent = inp.value;
+  });
+  fitToPage();
+}
+
+/* Очистить всё, что вписано */
+function clearSheet(){
+  document.querySelectorAll(".mydata input").forEach(i=>i.value = "");
+  const host = document.getElementById("blankHost");
+  host.querySelectorAll("[contenteditable]").forEach(el=>el.textContent = "");
+  fitToPage();
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  document.querySelectorAll(".mydata input").forEach(i=>{
+    i.addEventListener("input", ()=>{ applyPersonal(); resetIdle(); });
+    i.addEventListener("keydown", e=>e.stopPropagation());
+  });
+});
+
+/* Ужимаем содержимое, чтобы бланк всегда печатался на одном листе А4 */
+function fitToPage(){
+  const host = document.getElementById("blankHost");
+  const sheet = host.querySelector(".sheet");
+  if(!sheet) return;
+  sheet.style.transform = "none";
+  const avail = (297 - 22) / 25.4 * 96;
+  const h = sheet.getBoundingClientRect().height;
+  if(h > avail) sheet.style.transform = "scale(" + (avail/h).toFixed(4) + ")";
+}
+
+function doPrint(){ fitToPage(); window.print(); }
+
+/* ==================== ЯЗЫК ==================== */
+function setLang(l){
+  lang = l;
+  document.documentElement.lang = l;
+  document.querySelectorAll("[data-t]").forEach(el=>{
+    const v = T[l][el.dataset.t];
+    if(typeof v === "string") el.innerHTML = v;
+  });
+  document.getElementById("lr").classList.toggle("active", l==="ru");
+  document.getElementById("lk").classList.toggle("active", l==="kk");
+  document.querySelectorAll(".l-ru").forEach(b=>b.classList.toggle("active", l==="ru"));
+  document.querySelectorAll(".l-kk").forEach(b=>b.classList.toggle("active", l==="kk"));
+  renderCatalog();
+  if(current) openItem(current.id);
+  resetIdle();
+}
+
+/* ==================== ЗАВЕРШЕНИЕ СЕАНСА ==================== */
+function endSession(){
+  try{ sessionStorage.clear(); }catch(e){}
+  document.querySelectorAll(".mydata input").forEach(i=>i.value = "");
+  document.getElementById("blankHost").innerHTML = "";
+  current = null;
+  setLang("ru");
+  showMenu();
+}
+
+/* ==================== ТАЙМЕР БЕЗДЕЙСТВИЯ ==================== */
+let left = CONFIG.idleSeconds;
+const idleEl = document.getElementById("idle");
+function resetIdle(){ left = CONFIG.idleSeconds; idleEl.classList.remove("show"); }
+
+setInterval(()=>{
+  if(document.getElementById("menu").classList.contains("on")){ resetIdle(); return; }
+  left--;
+  if(left <= CONFIG.warnSeconds && left > 0){
+    idleEl.textContent = T[lang].idle(left);
+    idleEl.classList.add("show");
+  }
+  if(left <= 0) endSession();
+}, 1000);
+
+["mousemove","mousedown","keydown","touchstart","wheel"].forEach(e=>
+  document.addEventListener(e, resetIdle, {passive:true}));
+
+/* ==================== ЗАЩИТА ==================== */
+document.addEventListener("contextmenu", e=>e.preventDefault());
+document.addEventListener("dragstart",  e=>e.preventDefault());
+document.addEventListener("keydown", e=>{
+  const bad = ["F1","F3","F5","F6","F7","F11","F12"];
+  if(bad.includes(e.key) ||
+     (e.ctrlKey && ["n","t","w","s","u","j","o","h","r"].includes(e.key.toLowerCase())) ||
+     (e.ctrlKey && e.shiftKey) || e.altKey) e.preventDefault();
+});
+
+setLang("ru");
+</script>
+</body>
+</html>

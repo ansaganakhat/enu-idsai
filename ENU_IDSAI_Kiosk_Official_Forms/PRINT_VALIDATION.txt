@@ -1,0 +1,11 @@
+OFFICIAL PDF FORMS - QA REPORT
+
+Catalog forms: 33
+Language variants: 66
+Rendered official pages: 68
+Portrait A4 pages: 66
+Landscape A4 pages: 2
+Detected online-fill fields: 646
+Issues: 0
+
+PASS: every mapped PDF/SVG exists and every print page is A4 with the expected orientation.
